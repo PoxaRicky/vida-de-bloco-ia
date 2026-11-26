@@ -1,33 +1,30 @@
 ---
 name: vida-de-bloco
 description: >-
-  Cria roteiros, cenas 3D em Three.js, narração TTS e vídeos completos (Shorts e Longos)
-  no formato "E se...?" com personagens em bloco. Use quando o usuário pedir para criar
-  um vídeo, Short, roteiro ou animação para o canal.
+  Cria roteiros, cenas 2D/2.5D estilo Vida de Bloco (contorno grosso + cel-shading + blocos/studs),
+  narração multi-voz TTS e vídeos completos (Shorts e Longos) no formato "E se...?".
+  Use quando o usuário pedir para criar um vídeo, Short, roteiro ou animação para o canal.
 ---
 
 # Skill: Vida de Bloco (Formato "E se...?")
 
-## 1. Estrutura Obrigatória do Roteiro
+## 1. Identidade Visual Obrigatória (Fiel ao @VidadeBloco)
+- **Traço e Pintura:** Contorno escuro uniforme (`#1A1423`, 5–7px) + **cel-shading de 2 tons** (faixa vertical de sombra na direita de 24%) — implementado em `assets/characters/cartoon_rig.js`.
+- **Personagens Reutilizáveis:**
+  - `VB.drawBoy`: boné azul virado para trás com abertura laranja, tufos de cabelo laranja, camiseta amarela com coração pixelado rosa, expressões (`shocked_extreme`, `side_eye`, `star_eyes`, `happy`) e tablet.
+  - `VB.drawMom`: cabelo castanho com franja + rabo de cavalo lateral com elástico amarelo, brincos dourados, óculos redondos verde-água com reflexo de tela, cardigã verde-água sobre blusa rosa, calça roxa e coroa Admin opcional.
+- **CenáriosCompletos (`assets/scenes/environments.js`):**
+  - Nunca usar fundo vazio! Usar cenários ricos: `hook_sunburst` (com título gigante colorido no topo), `bedroom_duo` (papel de parede listrado roxo, janela, prateleira com troféu, pufe rosa), `obby_lava_fall` (plataforma, placa PULE!, bloco 3D verde, lava com partículas, rastro fantasma e contador `QUEDAS`), `dia_quatro_obby` (chão xadrez verde em perspectiva + explosão vermelha `DIA QUATRO`), `brazil_roblox_street` (rua com *studs*, Padaria, caixas d'água azuis, postes, sol quadrado, nametags e modal `⚙ SISTEMA`).
+- **Legendas Karaokê:** Fonte `Fredoka` pesada com contorno preto grosso, 2–3 palavras por vez com efeito *pop* e palavras-chave coloridas (`#FF66B2` rosa, `#5CE65C` verde, `#FFD426` amarelo).
 
-Todo vídeo (Short ou Longo) segue o molde **Outlier "E se...?"**:
-1. **Gancho (0–3s):** Ler a pergunta *"E se...?"* em voz alta imediatamente.
-2. **Escalada Progressiva:** Dividir em etapas crescentes de absurdo (`Dia 1`, `Dia 2`, `Dia 3`... ou fases).
-3. **Virada (Plot Twist):** Uma reviravolta inesperada perto do final.
-4. **CTA de 1 Palavra:** Fechar pedindo um comentário de **uma única palavra** (ex.: *"Comenta 'BLOCO' se você sobreviveria"*).
+## 2. Estrutura do Roteiro ("E se...?")
+1. **Gancho (0–3s):** Pergunta *"E se...?"* lida em voz alta + close-up no frame 1 + título empilhado.
+2. **Escalada Progressiva:** Avanço por dias (`Dia 1`, `Dia 4`, `Dia 7`...) aumentando o absurdo.
+3. **Virada (Plot Twist):** Reviravolta cômica no clímax.
+4. **CTA de 1 Palavra:** Fechar pedindo comentário de uma única palavra.
 
-## 2. Regras de Retenção
-
-### Para Shorts (Vertical 9:16, até 60s)
-- **Frame 1:** Close-up direto no rosto do personagem principal.
-- **Ritmo visual:** Mudança de câmera, expressão, objeto ou cenário a **cada menos de 1 segundo**.
-- **Temas:** Priorizar cotidiano próximo do público (família, escola, casa da vó, Brasil, cidade).
-
-### Para Vídeos Longos (Horizontal 16:9, 8–9 minutos)
-- Usar o **mesmo formato "E se...?"**, expandindo cada fase (`Dia 1` a `Dia 10+`) com diálogos, sub-conflitos e escalada contínua para manter retenção acima de 2–3 minutos por visualização.
-
-## 3. Pipeline Técnico Local
-1. **Roteiro estruturado (JSON):** Definir falas, personagens, emoções, posições de câmera e timestamps.
-2. **Áudio (TTS):** Gerar falas via `scripts/generate_tts.py` (ElevenLabs ou fallback Edge-TTS).
-3. **Cena 3D (Three.js):** Reutilizar blocos/personagens de `assets/characters/` e cenários de `assets/scenes/`.
-4. **Renderização Local:** Gerar o MP4 final em `output/` para revisão humana antes do upload.
+## 3. Pipeline de Execução Local
+1. Salvar o roteiro JSON em `scripts/<nome>.json` definindo `voz` (`menino` ou `mae`), `ambiente` e `destaque`.
+2. Gerar vozes: `python scripts/generate_tts.py scripts/<nome>.json`
+3. Renderizar vídeo via pipe direto no FFmpeg: `node scripts/render_video.js scripts/<nome>.json`
+4. Inspecionar os previews em `output/preview_scene_*.jpg` para garantir qualidade visual antes de entregar o MP4 final.

@@ -1,0 +1,55 @@
+{
+  "titulo": "E SE SUA MÃE COMEÇASSE A JOGAR ROBLOX?",
+  "formato": "short",
+  "cenas": [
+    {
+      "id": "hook_mae",
+      "voz": "menino",
+      "texto": "E se sua mãe começasse a jogar Roblox?",
+      "ambiente": "hook_sunburst",
+      "destaque": { "MÃE": "#FF66B2", "ROBLOX?": "#5CE65C" }
+    },
+    {
+      "id": "quarto_flagra",
+      "voz": "mae",
+      "texto": "Que joguinho quadrado é esse? Me dá esse tablet aqui agora!",
+      "ambiente": "bedroom_duo",
+      "destaque": { "QUADRADO": "#FFD426", "TABLET": "#5CE65C" }
+    },
+    {
+      "id": "menino_choque",
+      "voz": "menino",
+      "texto": "Não mãe, cuidado! Esse mapa é impossível!",
+      "ambiente": "boy_extreme_shock",
+      "destaque": { "MÃE,": "#FF66B2", "IMPOSSÍVEL!": "#FFD426" }
+    },
+    {
+      "id": "dia_um_lava",
+      "voz": "menino",
+      "texto": "Dia um: ela não sabe nem pular e cai na lava vinte vezes!",
+      "ambiente": "obby_lava_fall",
+      "destaque": { "DIA": "#FFD426", "LAVA": "#FF5733", "VINTE": "#FFD426" }
+    },
+    {
+      "id": "dia_quatro_pro",
+      "voz": "menino",
+      "texto": "Dia quatro: ela zerou o parkour inteiro sem errar nenhum pulo!",
+      "ambiente": "dia_quatro_obby",
+      "destaque": { "QUATRO:": "#FFD426", "PARKOUR": "#5CE65C" }
+    },
+    {
+      "id": "dia_sete_rua_brasil",
+      "voz": "menino",
+      "texto": "Dia sete: ela virou dona do servidor, comprou a rua inteira e me baniu de casa!",
+      "ambiente": "brazil_roblox_street",
+      "destaque": { "DONA": "#FFD426", "BANIU": "#FF5733" }
+    },
+    {
+      "id": "cta_final",
+      "voz": "mae",
+      "texto": "Vai lavar a louça no lobby! Comenta MÃE se a sua faria igual!",
+      "ambiente": "mom_admin_closeup",
+      "destaque": { "LOUÇA": "#5CE65C", "MÃE": "#FF66B2" }
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "vida-de-bloco-ia",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Gerador de vídeos 3D em blocos (Three.js + TTS + FFmpeg) no formato 'E se...?'",
+  "scripts": {
+    "render": "node scripts/render_video.js"
+  },
+  "dependencies": {
+    "ffmpeg-static": "^5.2.0",
+    "playwright": "^1.49.0",
+    "three": "^0.170.0"
+  }
+}
