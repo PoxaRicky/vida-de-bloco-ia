@@ -1,0 +1,108 @@
+{
+  "titulo": "E Se o BRASIL Inteiro Virasse ROBLOX Por 7 Dias? 🇧🇷😱",
+  "formato": "long",
+  "marca_dagua": "Vida de Bloco",
+  "arquivo_saida": "video_longo_01_brasil_7dias_poxarique.mp4",
+  "cenas": [
+    {
+      "id": "dia_1_despertar",
+      "voz": "menino",
+      "hud_dias": "DIA 1",
+      "texto": "E se você acordasse amanhã cedo e o Brasil inteiro tivesse virado um servidor oficial de Roblox por sete dias seguidos?",
+      "ambiente": "longo_dia1_rua",
+      "destaque": { "BRASIL": "#5CE65C", "ROBLOX": "#FFD426", "SETE": "#FF66B2" }
+    },
+    {
+      "id": "dia_1_quarto",
+      "voz": "mae",
+      "hud_dias": "DIA 1",
+      "texto": "Menino do céu, corre aqui agora! Minhas mãos ficaram quadradas e apareceu uma barra de vida em cima da minha cabeça!",
+      "ambiente": "bedroom_duo",
+      "destaque": { "QUADRADAS": "#FFD426", "VIDA": "#FF5733" }
+    },
+    {
+      "id": "dia_2_padaria",
+      "voz": "menino",
+      "hud_dias": "DIA 2",
+      "texto": "No dia dois, o dinheiro de papel sumiu! O Seu Zé da padaria passou a cobrar dois Robux por cada pão de queijo quentinho!",
+      "ambiente": "longo_dia2_padaria",
+      "destaque": { "ROBUX": "#5CE65C", "QUEIJO": "#FFD426" }
+    },
+    {
+      "id": "dia_2_bateria",
+      "voz": "menino",
+      "hud_dias": "DIA 2",
+      "texto": "E pior: quem saísse no sol com celular descarregando perdia metade da barra de energia na calçada!",
+      "ambiente": "longo_dia2_bateria",
+      "destaque": { "SOL": "#FFD426", "ENERGIA": "#FF5733" }
+    },
+    {
+      "id": "dia_3_escola",
+      "voz": "diretora",
+      "hud_dias": "DIA 3",
+      "texto": "Atenção alunos! A entrada da escola virou um parkour de lava e quem cair vai direto pra recuperação!",
+      "ambiente": "longo_dia3_escola",
+      "destaque": { "PARKOUR": "#5CE65C", "LAVA": "#FF5733", "RECUPERAÇÃO!": "#FFD426" }
+    },
+    {
+      "id": "dia_4_obby_cantina",
+      "voz": "menino",
+      "hud_dias": "DIA 4",
+      "texto": "No dia quatro eu treinei tanto pulo em bloco que zerei o pátio inteiro e desbloqueei coxinha lendária infinita!",
+      "ambiente": "dia_quatro_obby",
+      "dia_topo": "DIA",
+      "dia_num": "QUATRO",
+      "destaque": { "QUATRO": "#FFD426", "COXINHA": "#5CE65C", "INFINITA!": "#FF66B2" }
+    },
+    {
+      "id": "dia_5_mercado",
+      "voz": "menino",
+      "hud_dias": "DIA 5",
+      "texto": "No dia cinco o supermercado virou fase de chefão! Minha mãe sumiu procurando tempero e o caixa disparou laser vermelho!",
+      "ambiente": "longo_dia5_mercado",
+      "destaque": { "CHEFÃO!": "#FF5733", "LASER": "#FFD426" }
+    },
+    {
+      "id": "dia_5_chinelo",
+      "voz": "mae",
+      "hud_dias": "DIA 5",
+      "texto": "Sai da frente desse caixa! Eu tenho o chinelo mítico nível novecentos e passo tudo no cartão dourado!",
+      "ambiente": "longo_dia5_chinelo",
+      "destaque": { "CHINELO": "#FFD426", "MÍTICO": "#FF66B2", "DOURADO!": "#5CE65C" }
+    },
+    {
+      "id": "dia_6_casa_vo",
+      "voz": "vo",
+      "hud_dias": "DIA 6",
+      "texto": "Podem entrar na casa da Vó! Aqui o modo batalha é proibido e minha panela de feijão recupera cem por cento da vida!",
+      "ambiente": "longo_dia6_vo",
+      "destaque": { "VÓ!": "#FF66B2", "FEIJÃO": "#FFD426", "CEM": "#5CE65C" }
+    },
+    {
+      "id": "dia_6_sorvete",
+      "voz": "menino",
+      "hud_dias": "DIA 6",
+      "texto": "Só cuidado com a geladeira da Vó, porque noventa e nove por cento dos baús de sorvete eram feijão congelado!",
+      "ambiente": "longo_dia6_sorvete",
+      "destaque": { "GELADEIRA": "#5CE65C", "SORVETE": "#FF66B2", "FEIJÃO": "#FFD426" }
+    },
+    {
+      "id": "dia_7_caramelo",
+      "voz": "menino",
+      "hud_dias": "DIA 7",
+      "texto": "No sétimo dia, o cachorro Caramelo virou dono oficial do servidor do Brasil e deu Robux grátis pra rua inteira!",
+      "ambiente": "caramelo_admin_street",
+      "sistema_1": "Caramelo_Admin assumiu a presidência do servidor!",
+      "sistema_2": "Boletos banidos • Pão de queijo liberado pra todos.",
+      "destaque": { "CARAMELO": "#FFD426", "BRASIL": "#5CE65C", "GRÁTIS": "#FF66B2" }
+    },
+    {
+      "id": "encerramento_cta",
+      "voz": "menino",
+      "hud_dias": "FIM!",
+      "texto": "Se você jogaria nesse servidor brasileiro todo dia, já se inscreve no Vida de Bloco e comenta PARTE DOIS aqui embaixo!",
+      "ambiente": "longo_final_elenco",
+      "destaque": { "INSCREVE": "#FF5733", "PARTE": "#FFD426", "DOIS": "#5CE65C" }
+    }
+  ]
+}

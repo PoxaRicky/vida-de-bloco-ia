@@ -326,7 +326,7 @@ window.VB = window.VB || {};
       strokedText(ctx, "CARAMELO", W / 2, H * 0.15, Math.round(122 * S), "#FFD426", 18);
       strokedText(ctx, "VIRASSE DONO DO ROBLOX?", W / 2, H * 0.22, Math.round(54 * S), "#5CE65C", 12);
     } else if (envName === "bedroom_duo") {
-      const floorY = H * 0.74;
+      const floorY = isL ? H * 0.65 : H * 0.74;
       drawStripedWall(ctx, W, floorY);
 
       ctx.fillStyle = "#5B449E";
@@ -364,7 +364,7 @@ window.VB = window.VB || {};
       const boyX = isL ? W * 0.34 : 265;
       const momX = isL ? W * 0.66 : 800;
       ctx.beginPath();
-      ctx.ellipse(boyX, floorY + 25 * S, 285 * S, 195 * S, 0, 0, Math.PI * 2);
+      ctx.ellipse(boyX, floorY + (isL ? -10 : 25) * S, (isL ? 245 : 285) * S, (isL ? 165 : 195) * S, 0, 0, Math.PI * 2);
       ctx.fillStyle = "#F768BA";
       ctx.fill();
       ctx.lineWidth = 7;
@@ -373,8 +373,8 @@ window.VB = window.VB || {};
 
       VB.drawBoy(ctx, {
         x: boyX,
-        y: floorY - 220 * S,
-        scale: 1.46 * S,
+        y: floorY - (isL ? 235 : 220) * S,
+        scale: (isL ? 1.3 : 1.46) * S,
         expr: "side_eye",
         pose: "sit",
         holdingTablet: true,
@@ -383,8 +383,8 @@ window.VB = window.VB || {};
 
       VB.drawMom(ctx, {
         x: momX,
-        y: floorY - 175 * S + Math.abs(Math.sin(t * 10)) * -18 * S,
-        scale: 1.46 * S,
+        y: floorY - (isL ? 205 : 175) * S + Math.abs(Math.sin(t * 10)) * -18 * S,
+        scale: (isL ? 1.3 : 1.46) * S,
         expr: "scream",
         pose: "stand",
         t,
@@ -623,9 +623,9 @@ window.VB = window.VB || {};
 
       // Alerta modal "⚙ SISTEMA"
       ctx.save();
-      const mw = Math.min(W - 100, 920 * S);
+      const mw = isL ? 880 : Math.min(W - 100, 920 * S);
       const mx = (W - mw) / 2;
-      const my = isL ? 38 : 190;
+      const my = isL ? 54 : 190;
       VB.celBox(ctx, mx, my, mw, 200 * S, 28, "#16182D", 6, 0);
       ctx.lineWidth = 5;
       ctx.strokeStyle = "#FFD426";
@@ -1477,6 +1477,279 @@ window.VB = window.VB || {};
       VB.drawBoy(ctx, { x: W * 0.5, y: H * 0.55, scale: 1.44 * S, expr: "star_eyes", pose: "cheer", goldenShoes: true, holdingTablet: true, nametag: "Qual sua % agora?", t });
       strokedText(ctx, "COMENTA AGORA:", W / 2, H * 0.11, Math.round(70 * S), "#FFFFFF", 15);
       strokedText(ctx, cena.cta_palavra || "SUA BATERIA % 🔋", W / 2, H * 0.19, Math.round(92 * S), "#5CE65C", 18);
+    } else if (envName === "longo_dia1_rua") {
+      // Cenas responsivas 16:9 Widescreen (1920x1080) para Vídeo Longo!
+      const roadY = H * 0.66;
+      drawBrazilianNeighborhood(ctx, W, H, roadY, S);
+      VB.drawBoy(ctx, { x: W * 0.34, y: roadY - 70 * S, scale: 1.15 * S, expr: "shocked_extreme", goldenShoes: true, nametag: "Você (Nível 1)", t });
+      VB.drawCaramelo(ctx, { x: W * 0.66, y: roadY - 10 * S, scale: 1.25 * S, sunglasses: true, pose: "cheer", nametag: "Caramelo_NPC", t });
+      VB.celBox(ctx, W * 0.24, 38, W * 0.52, 118, 26, "#16182D", 6, 0);
+      strokedText(ctx, "⚙ SERVIDOR BRASIL INICIADO!", W / 2, 74, 36, "#FFD426", 8);
+      strokedText(ctx, "213 milhões de jogadores conectados por 7 dias", W / 2, 118, 30, "#5CE65C", 7);
+    } else if (envName === "longo_dia2_padaria") {
+      const roadY = H * 0.66;
+      drawBrazilianNeighborhood(ctx, W, H, roadY, S);
+      VB.drawBoy(ctx, { x: W * 0.33, y: roadY - 75 * S, scale: 1.15 * S, expr: "star_eyes", breadBag: true, nametag: "Cliente_Faminto", t });
+      VB.drawPadeiro(ctx, { x: W * 0.67, y: roadY - 75 * S, scale: 1.18 * S, expr: "happy", nametag: "Seu_Zé (2 Robux = Pão)", t });
+      VB.celBox(ctx, W * 0.24, 38, W * 0.52, 114, 26, "#16182D", 6, 0);
+      strokedText(ctx, "🥖 NOVA ECONOMIA DA PADARIA", W / 2, 74, 35, "#FFD426", 8);
+      strokedText(ctx, "1 Pão de Queijo = 2 Robux • Papel banido!", W / 2, 118, 30, "#5CE65C", 7);
+    } else if (envName === "longo_dia2_bateria") {
+      const roadY = H * 0.66;
+      drawBrazilianNeighborhood(ctx, W, H, roadY, S);
+      const hpNow = Math.max(12, 58 - Math.floor(t * 10));
+      VB.drawBoy(ctx, { x: W * 0.52, y: roadY - 135 * S, scale: 1.14 * S, expr: "shocked_extreme", holdingTablet: true, hp: hpNow, nametag: `Bateria: ${hpNow}%`, t });
+      VB.celBox(ctx, W * 0.24, 38, W * 0.52, 114, 26, "#16182D", 6, 0);
+      strokedText(ctx, "☀ CALOR BRASILEIRO + BRILHO 100%", W / 2, 74, 34, "#FF5733", 8);
+      strokedText(ctx, "Celular descarregando drena sua barra de energia!", W / 2, 118, 29, "#FFD426", 7);
+    } else if (envName === "longo_dia3_escola") {
+      const lavaY = H * 0.68;
+      ctx.fillStyle = "#1E293B";
+      ctx.fillRect(0, 0, W, lavaY);
+      for (let i = 0; i < 6; i++) {
+        VB.celBox(ctx, 70 + i * 305, 195, 255, 420, 12, "#2563EB", 6, 0.22);
+      }
+      const lavaG = ctx.createLinearGradient(0, lavaY, 0, H);
+      lavaG.addColorStop(0, "#FF6B00");
+      lavaG.addColorStop(0.5, "#C2410C");
+      lavaG.addColorStop(1, "#181024");
+      ctx.fillStyle = lavaG;
+      ctx.fillRect(0, lavaY, W, H - lavaY);
+
+      VB.celBox(ctx, W * 0.16, lavaY - 36, 440, 64, 16, "#3F3F46", 6, 0.24);
+      VB.celBox(ctx, W * 0.58, lavaY - 54, 460, 64, 16, "#3F3F46", 6, 0.24);
+
+      VB.drawDiretora(ctx, { x: W * 0.28, y: lavaY - 320 * S, scale: 1.15 * S, expr: "scream", megaphone: true, stopwatch: true, nametag: "[ADM] Diretora_Brava", t });
+      VB.drawBoy(ctx, { x: W * 0.7, y: lavaY - 230 * S - Math.abs(Math.sin(t * 7)) * 55, scale: 1.16 * S, expr: "shocked_extreme", pose: "cheer", backpack: true, nametag: "Aluno_No_Obby", t });
+
+      VB.celBox(ctx, W * 0.24, 38, W * 0.52, 110, 26, "#16182D", 6, 0);
+      strokedText(ctx, "🌋 ESCOLA ESTADUAL OBBY MORTAL", W / 2, 72, 35, "#FF5733", 8);
+      strokedText(ctx, "Quem pisar na lava vai direto pra recuperação!", W / 2, 114, 30, "#FFD426", 7);
+    } else if (envName === "longo_dia5_mercado") {
+      const floorY = H * 0.68;
+      ctx.fillStyle = "#1E293B";
+      ctx.fillRect(0, 0, W, floorY);
+      ctx.fillStyle = "#0F172A";
+      ctx.fillRect(0, floorY, W, H - floorY);
+
+      VB.celBox(ctx, W * 0.32, floorY - 82, 620, 110, 16, "#334155", 6, 0.22);
+      VB.drawBoy(ctx, { x: W * 0.24, y: floorY - 155 * S, scale: 1.16 * S, expr: "shocked_extreme", hp: 14, nametag: "Sozinho_Sem_Cartão", t });
+      VB.drawCaixa(ctx, { x: W * 0.74, y: floorY - 160 * S, scale: 1.18 * S, expr: "side_eye", scanner: true, nametag: "[BOSS] Caixa_Laser", t });
+
+      VB.celBox(ctx, W * 0.24, 38, W * 0.52, 112, 26, "#16182D", 6, 0);
+      strokedText(ctx, "🛒 ARENA DE CHEFÃO — FILA DO MERCADO", W / 2, 74, 34, "#FF5733", 8);
+      strokedText(ctx, "Mãe sumiu no corredor • Faltam 2 produtos!", W / 2, 116, 30, "#FFD426", 7);
+    } else if (envName === "longo_dia5_chinelo") {
+      drawSunburst(ctx, W, H, t, "#EA580C", "#4C1D95");
+      const floorY = H * 0.68;
+      ctx.fillStyle = "#161026";
+      ctx.fillRect(0, floorY, W, H - floorY);
+
+      VB.drawMom(ctx, { x: W * 0.28, y: floorY - 160 * S, scale: 1.22 * S, expr: "scream", pose: "cheer", crown: true, nametag: "👑 Mãe_Nível_900", t });
+      VB.drawChinelo(ctx, W * 0.5, floorY - 220 + Math.sin(t * 10) * 22, 1.35, t * 8, true);
+      VB.drawCaixa(ctx, { x: W * 0.74, y: floorY - 155 * S, scale: 1.15 * S, expr: "shocked_extreme", scanner: false, nametag: "Caixa_Rendida", t });
+
+      VB.celBox(ctx, W * 0.24, 38, W * 0.52, 112, 26, "#16182D", 6, 0);
+      strokedText(ctx, "🩴 ITEM MÍTICO EQUIPADO: CHINELO + CARTÃO VIP", W / 2, 74, 31, "#FFD426", 8);
+      strokedText(ctx, "Compra aprovada na hora com respeito máximo!", W / 2, 116, 30, "#5CE65C", 7);
+    } else if (envName === "longo_dia6_vo") {
+      const floorY = H * 0.68;
+      ctx.fillStyle = "#7C2D12";
+      ctx.fillRect(0, 0, W, floorY);
+      ctx.fillStyle = "#241412";
+      ctx.fillRect(0, floorY, W, H - floorY);
+
+      VB.drawVovo(ctx, { x: W * 0.3, y: floorY - 165 * S, scale: 1.24 * S, expr: "happy", crown: true, holdingPot: true, nametag: "👑 [SAFE ZONE] Vó_Admin", t });
+      VB.celBox(ctx, W * 0.44, floorY - 76, 340, 120, 18, "#DC2626", 6, 0.2);
+      VB.drawBoy(ctx, { x: W * 0.72, y: floorY - 160 * S, scale: 1.18 * S, expr: "star_eyes", pose: "cheer", hp: 100, nametag: "HP: 100% Recuperado!", t });
+
+      VB.celBox(ctx, W * 0.24, 38, W * 0.52, 112, 26, "#16182D", 6, 0);
+      strokedText(ctx, "👵 ÁREA SEGURA — CASA DA VÓ", W / 2, 74, 36, "#FF66B2", 8);
+      strokedText(ctx, "PvP Desligado • Feijão quentinho cura 100% de vida!", W / 2, 116, 29, "#5CE65C", 7);
+    } else if (envName === "longo_dia6_sorvete") {
+      const benchY = H * 0.67;
+      ctx.fillStyle = "#4A1D4A";
+      ctx.fillRect(0, 0, W, benchY);
+      ctx.fillStyle = "#1D0F24";
+      ctx.fillRect(0, benchY, W, H - benchY);
+
+      VB.celBox(ctx, W * 0.14, 185, 290, 490, 22, "#F8FAFC", 6, 0.16);
+      VB.celBox(ctx, W * 0.16, 215, 240, 420, 14, "#FEF08A", 5, 0);
+
+      VB.celBox(ctx, W * 0.41, benchY - 185, 330, 190, 24, "#F8FAFC", 6, 0.2);
+      VB.celBox(ctx, W * 0.43, benchY - 135, 280, 72, 12, "#F472B6", 5, 0);
+      strokedText(ctx, "SORVETE 2L", W * 0.495, benchY - 98, 34, "#FFFFFF", 6);
+      ctx.beginPath();
+      ctx.ellipse(W * 0.495, benchY - 186, 142, 36, 0, 0, Math.PI * 2);
+      ctx.fillStyle = "#78350F";
+      ctx.fill();
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = OUTLINE;
+      ctx.stroke();
+
+      VB.drawBoy(ctx, { x: W * 0.77, y: benchY - 155 * S, scale: 1.18 * S, expr: "shocked_extreme", nametag: "Caiu_No_Bait_Da_Vó", t });
+
+      VB.celBox(ctx, W * 0.24, 38, W * 0.52, 112, 26, "#16182D", 6, 0);
+      strokedText(ctx, "✨ BAÚ DA GELADEIRA ABERTO!", W / 2, 74, 35, "#FF66B2", 8);
+      strokedText(ctx, "99% de chance: Era Feijão Congelado de novo!", W / 2, 116, 30, "#FFD426", 7);
+    } else if (envName === "longo_final_elenco") {
+      drawSunburst(ctx, W, H, t, "#7C3AED", "#1E1B4B");
+      drawSpeedLines(ctx, W, H, t);
+      VB.drawVovo(ctx, { x: W * 0.2, y: H * 0.56, scale: 1.08 * S, expr: "happy", crown: true, holdingPot: true, t });
+      VB.drawMom(ctx, { x: W * 0.39, y: H * 0.56, scale: 1.08 * S, expr: "star_eyes", pose: "cheer", t });
+      VB.drawBoy(ctx, { x: W * 0.59, y: H * 0.56, scale: 1.14 * S, expr: "star_eyes", pose: "cheer", goldenShoes: true, t });
+      VB.drawCaramelo(ctx, { x: W * 0.8, y: H * 0.61, scale: 1.2 * S, crown: true, sunglasses: true, pose: "cheer", t });
+
+      strokedText(ctx, "INSCREVA-SE NO VIDA DE BLOCO!", W / 2, H * 0.12, 58, "#FFD426", 14);
+      strokedText(ctx, "COMENTA \"PARTE 2\" 👇", W / 2, H * 0.22, 68, "#5CE65C", 16);
+    } else if (envName === "dti_hook") {
+      drawSunburst(ctx, W, H, t, "#EC4899", "#4C1D95");
+      drawSpeedLines(ctx, W, H, t);
+      strokedText(ctx, "E SE SUA MÃE JOGASSE", W / 2, H * 0.105, Math.round(62 * S), "#FFFFFF", 15);
+      strokedText(ctx, "DRESS TO IMPRESS", W / 2, H * 0.175, Math.round(76 * S), "#FFD426", 18);
+      strokedText(ctx, "NA VIDA REAL?!", W / 2, H * 0.242, Math.round(68 * S), "#5CE65C", 16);
+      VB.drawBoy(ctx, { x: W * 0.5, y: H * 0.73, scale: 2.22 * S, expr: "shocked_extreme", t });
+    } else if (envName === "dti_quarto") {
+      const floorY = H * 0.68;
+      ctx.fillStyle = "#581C87";
+      ctx.fillRect(0, 0, W, floorY);
+      ctx.fillStyle = "#2E1065";
+      ctx.fillRect(0, floorY, W, H - floorY);
+      VB.celBox(ctx, W * 0.08, 195, W * 0.84, 110, 22, "#16182D", 6, 0);
+      strokedText(ctx, "👗 TEMA: CHURRASCO DE DOMINGO", W / 2, 232, Math.round(34 * S), "#FF66B2", 7);
+      strokedText(ctx, "⏱ 10 SEGUNDOS RESTANTES!", W / 2, 276, Math.round(32 * S), "#FFD426", 7);
+      VB.drawBoy(ctx, { x: W * 0.5, y: floorY - 120 * S, scale: 1.45 * S, expr: "shocked_extreme", goldenShoes: true, nametag: "Look_Churrasco", t });
+    } else if (envName === "dti_passarela_mae") {
+      const floorY = H * 0.68;
+      ctx.fillStyle = "#831843";
+      ctx.fillRect(0, 0, W, floorY);
+      ctx.fillStyle = "#EC4899";
+      ctx.fillRect(W * 0.15, floorY, W * 0.7, H - floorY);
+      VB.celBox(ctx, W * 0.08, 195, W * 0.84, 106, 22, "#16182D", 6, 0);
+      strokedText(ctx, "⭐ NOTA DA MÃE: 1 ESTRELA!", W / 2, 232, Math.round(36 * S), "#FF5733", 7);
+      strokedText(ctx, "\"Cadê a meia e o casaco?!\"", W / 2, 274, Math.round(28 * S), "#FFFFFF", 6);
+      VB.drawBoy(ctx, { x: W * 0.32, y: floorY - 115 * S, scale: 1.25 * S, expr: "shocked_extreme", goldenShoes: true, t });
+      VB.drawMom(ctx, { x: W * 0.7, y: floorY - 125 * S, scale: 1.32 * S, expr: "angry", nametag: "Mãe_Jurada", t });
+    } else if (envName === "dti_passarela_vo") {
+      drawSunburst(ctx, W, H, t, "#F472B6", "#7E22CE");
+      const floorY = H * 0.68;
+      ctx.fillStyle = "#FBCFE8";
+      ctx.fillRect(W * 0.12, floorY, W * 0.76, H - floorY);
+      VB.celBox(ctx, W * 0.08, 195, W * 0.84, 106, 22, "#16182D", 6, 0);
+      strokedText(ctx, "👑 VÓ VIP: 5 ESTRELAS!", W / 2, 232, Math.round(38 * S), "#FFD426", 7);
+      strokedText(ctx, "Item Mítico: Pano de Prato Capa!", W / 2, 274, Math.round(28 * S), "#5CE65C", 6);
+      VB.drawVovo(ctx, { x: W * 0.5, y: floorY - 125 * S, scale: 1.45 * S, expr: "happy", crown: true, holdingPot: true, nametag: "Vó_VIP_5Estrelas", t });
+    } else if (envName === "dti_oof_cta") {
+      drawSunburst(ctx, W, H, t, "#EC4899", "#1E1B4B");
+      drawSpeedLines(ctx, W, H, t);
+      VB.drawBoy(ctx, { x: W * 0.34, y: H * 0.56, scale: 1.25 * S, expr: "shocked_extreme", t });
+      VB.drawVovo(ctx, { x: W * 0.68, y: H * 0.56, scale: 1.28 * S, expr: "happy", crown: true, t });
+      strokedText(ctx, "COMENTA AGORA:", W / 2, H * 0.11, Math.round(68 * S), "#FFFFFF", 15);
+      strokedText(ctx, cena.cta_palavra || "\"VIP\" 👇", W / 2, H * 0.19, Math.round(88 * S), "#FFD426", 18);
+    } else if (envName === "tsunami_hook") {
+      const shake = Math.sin(t * 26) * 7;
+      drawSunburst(ctx, W, H, t, "#DC2626", "#1E3A8A");
+      drawSpeedLines(ctx, W, H, t);
+      strokedText(ctx, "E SE O ÔNIBUS ESCOLAR", W / 2, H * 0.105, Math.round(60 * S), "#FFFFFF", 15);
+      strokedText(ctx, "VIRASSE UM TSUNAMI", W / 2, H * 0.175, Math.round(70 * S), "#38BDF8", 18);
+      strokedText(ctx, "DO ROBLOX?!", W / 2, H * 0.242, Math.round(74 * S), "#FFD426", 16);
+      VB.drawBoy(ctx, { x: W * 0.5 + shake, y: H * 0.73, scale: 2.22 * S, expr: "shocked_extreme", t });
+    } else if (envName === "tsunami_fruta") {
+      const floorY = H * 0.68;
+      ctx.fillStyle = "#FACC15";
+      ctx.fillRect(0, 0, W, floorY);
+      ctx.fillStyle = "#1E293B";
+      ctx.fillRect(0, floorY, W, H - floorY);
+      // Janela com tsunami azul
+      VB.celBox(ctx, W * 0.1, 315, W * 0.8, 220, 20, "#0284C7", 6, 0);
+      VB.celBox(ctx, W * 0.08, 195, W * 0.84, 106, 22, "#16182D", 6, 0);
+      strokedText(ctx, "🍈 FRUTA DA MOCHILA PESADA", W / 2, 232, Math.round(34 * S), "#A855F7", 7);
+      strokedText(ctx, "Peso +500kg • Imune a curvas!", W / 2, 274, Math.round(28 * S), "#5CE65C", 6);
+      VB.drawBoy(ctx, { x: W * 0.5, y: floorY - 115 * S, scale: 1.42 * S, expr: "star_eyes", goldenShoes: true, nametag: "Mochila_Mítica", t });
+    } else if (envName === "tsunami_parkour") {
+      const floorY = H * 0.68;
+      ctx.fillStyle = "#1E3A8A";
+      ctx.fillRect(0, 0, W, floorY);
+      ctx.fillStyle = "#0F172A";
+      ctx.fillRect(0, floorY, W, H - floorY);
+      VB.celBox(ctx, W * 0.08, 195, W * 0.84, 106, 22, "#16182D", 6, 0);
+      strokedText(ctx, "🌊 ESCAPE TSUNAMI: FASE 2", W / 2, 232, Math.round(35 * S), "#38BDF8", 7);
+      strokedText(ctx, "Parkour nos bancos do ônibus!", W / 2, 274, Math.round(28 * S), "#FFD426", 6);
+      VB.celBox(ctx, W * 0.18, floorY - 70, 200, 70, 14, "#F59E0B", 5, 0);
+      VB.celBox(ctx, W * 0.58, floorY - 110, 200, 70, 14, "#F59E0B", 5, 0);
+      VB.drawBoy(ctx, { x: W * 0.5, y: floorY - 190 * S, scale: 1.28 * S, expr: "shocked_extreme", pose: "cheer", t });
+    } else if (envName === "tsunami_freada") {
+      const floorY = H * 0.68;
+      ctx.fillStyle = "#7F1D1D";
+      ctx.fillRect(0, 0, W, floorY);
+      ctx.fillStyle = "#1E293B";
+      ctx.fillRect(0, floorY, W, H - floorY);
+      VB.celBox(ctx, W * 0.08, 195, W * 0.84, 106, 22, "#16182D", 6, 0);
+      strokedText(ctx, "🚨 FREADA BRUSCA DETECTADA!", W / 2, 232, Math.round(34 * S), "#FF5733", 7);
+      strokedText(ctx, "🎫 Passe do Estudante Mítico Ativado!", W / 2, 274, Math.round(27 * S), "#FFD426", 6);
+      VB.drawBoy(ctx, { x: W * 0.5, y: floorY - 115 * S, scale: 1.4 * S, expr: "happy", goldenShoes: true, nametag: "Sobrevivente_VIP", t });
+    } else if (envName === "tsunami_cta") {
+      drawSunburst(ctx, W, H, t, "#0284C7", "#1E1B4B");
+      drawSpeedLines(ctx, W, H, t);
+      VB.drawMotorista(ctx, { x: W * 0.34, y: H * 0.56, scale: 1.24 * S, expr: "happy", nametag: "Motorista_Pro", t });
+      VB.drawBoy(ctx, { x: W * 0.68, y: H * 0.56, scale: 1.28 * S, expr: "star_eyes", pose: "cheer", t });
+      strokedText(ctx, "COMENTA AGORA:", W / 2, H * 0.11, Math.round(68 * S), "#FFFFFF", 15);
+      strokedText(ctx, cena.cta_palavra || "\"ONIBUS\" 👇", W / 2, H * 0.19, Math.round(88 * S), "#FFD426", 18);
+    } else if (envName === "brookhaven_hook") {
+      const floorY = H * 0.68;
+      ctx.fillStyle = "#1E293B";
+      ctx.fillRect(0, 0, W, floorY);
+      ctx.fillStyle = "#0F172A";
+      ctx.fillRect(0, floorY, W, H - floorY);
+      VB.celBox(ctx, W * 0.24, 38, W * 0.52, 114, 26, "#16182D", 6, 0);
+      strokedText(ctx, "🏠 BROOKHAVEN ATIVADO NO PRÉDIO!", W / 2, 74, 34, "#38BDF8", 8);
+      strokedText(ctx, "Qualquer vizinho pode invadir sua casa!", W / 2, 118, 29, "#FFD426", 7);
+      VB.drawBoy(ctx, { x: W * 0.5, y: floorY - 140 * S, scale: 1.28 * S, expr: "shocked_extreme", nametag: "Você (Sem Porta!)", t });
+    } else if (envName === "brookhaven_portaria") {
+      const roadY = H * 0.66;
+      drawBrazilianNeighborhood(ctx, W, H, roadY, S);
+      VB.celBox(ctx, W * 0.24, 38, W * 0.52, 114, 26, "#16182D", 6, 0);
+      strokedText(ctx, "🚨 CAOS NA PORTARIA DO CONDOMÍNIO", W / 2, 74, 34, "#C084FC", 8);
+      strokedText(ctx, "Vizinhos trocando de apartamento a cada 5 min!", W / 2, 118, 28, "#5CE65C", 7);
+      VB.drawSindica(ctx, { x: W * 0.34, y: roadY - 75 * S, scale: 1.2 * S, expr: "angry", megaphone: true, nametag: "Síndica_Desesperada", t });
+      VB.drawBoy(ctx, { x: W * 0.68, y: roadY - 70 * S, scale: 1.18 * S, expr: "shocked_extreme", t });
+    } else if (envName === "brookhaven_cofre") {
+      const floorY = H * 0.68;
+      ctx.fillStyle = "#334155";
+      ctx.fillRect(0, 0, W, floorY);
+      ctx.fillStyle = "#1E293B";
+      ctx.fillRect(0, floorY, W, H - floorY);
+      VB.celBox(ctx, W * 0.24, 38, W * 0.52, 114, 26, "#16182D", 6, 0);
+      strokedText(ctx, "🔐 COFRE SECRETO ATRÁS DO BOTIJÃO!", W / 2, 74, 33, "#FFD426", 8);
+      strokedText(ctx, "Loot Encontrado: Tupperware da Mãe!", W / 2, 118, 29, "#FF66B2", 7);
+      VB.drawBoy(ctx, { x: W * 0.34, y: floorY - 140 * S, scale: 1.2 * S, expr: "star_eyes", t });
+      VB.drawMom(ctx, { x: W * 0.68, y: floorY - 145 * S, scale: 1.22 * S, expr: "angry", nametag: "Não_Mexe_No_Meu_Pote", t });
+    } else if (envName === "brookhaven_perseguicao") {
+      const floorY = H * 0.68;
+      ctx.fillStyle = "#0F172A";
+      ctx.fillRect(0, 0, W, floorY);
+      ctx.fillStyle = "#020617";
+      ctx.fillRect(0, floorY, W, H - floorY);
+      VB.celBox(ctx, W * 0.24, 38, W * 0.52, 114, 26, "#16182D", 6, 0);
+      strokedText(ctx, "🚫 22H: MODO BANIR DO SERVIDOR!", W / 2, 74, 34, "#FF5733", 8);
+      strokedText(ctx, "Perseguição épica de patinete na garagem!", W / 2, 118, 29, "#FFD426", 7);
+      VB.drawSindica(ctx, { x: W * 0.32, y: floorY - 140 * S, scale: 1.22 * S, expr: "angry", megaphone: true, nametag: "Síndica_Admin", t });
+      VB.drawBoy(ctx, { x: W * 0.7, y: floorY - 135 * S, scale: 1.2 * S, expr: "shocked_extreme", goldenShoes: true, t });
+    } else if (envName === "brookhaven_desfecho") {
+      const roadY = H * 0.66;
+      drawBrazilianNeighborhood(ctx, W, H, roadY, S);
+      VB.celBox(ctx, W * 0.24, 38, W * 0.52, 114, 26, "#16182D", 6, 0);
+      strokedText(ctx, "☀ SERVIDOR REINICIADO À MEIA-NOITE", W / 2, 74, 33, "#5CE65C", 8);
+      strokedText(ctx, "Mas o carro do pai ainda tá na árvore...", W / 2, 118, 29, "#FFD426", 7);
+      VB.drawBoy(ctx, { x: W * 0.5, y: roadY - 70 * S, scale: 1.22 * S, expr: "shocked_extreme", t });
+    } else if (envName === "brookhaven_cta") {
+      drawSunburst(ctx, W, H, t, "#2563EB", "#1E1B4B");
+      drawSpeedLines(ctx, W, H, t);
+      VB.drawSindica(ctx, { x: W * 0.25, y: H * 0.56, scale: 1.12 * S, expr: "happy", megaphone: true, t });
+      VB.drawBoy(ctx, { x: W * 0.5, y: H * 0.56, scale: 1.18 * S, expr: "star_eyes", pose: "cheer", goldenShoes: true, t });
+      VB.drawMom(ctx, { x: W * 0.75, y: H * 0.56, scale: 1.12 * S, expr: "happy", pose: "cheer", t });
+      strokedText(ctx, "INSCREVA-SE NO VIDA DE BLOCO!", W / 2, H * 0.12, 58, "#FFD426", 14);
+      strokedText(ctx, "COMENTA \"BROOKHAVEN\" 👇", W / 2, H * 0.22, 68, "#5CE65C", 16);
     }
 
     if (isL && cena.hud_dias) {

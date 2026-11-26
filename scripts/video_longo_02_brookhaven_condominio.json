@@ -1,0 +1,55 @@
+{
+  "titulo": "E Se o Seu Condomínio Virasse BROOKHAVEN Por 24 Horas? 🏠🚨",
+  "formato": "long",
+  "marca_dagua": "Vida de Bloco",
+  "arquivo_saida": "video_longo_02_brookhaven_condominio.mp4",
+  "cenas": [
+    {
+      "id": "hook",
+      "voz": "menino",
+      "texto": "Acordei hoje e descobri que qualquer vizinho pode invadir minha casa clicando num botão de Brookhaven!",
+      "ambiente": "brookhaven_hook",
+      "hud_dias": "HORA 01 / 24",
+      "destaque": { "VIZINHO": "#FFD426", "BROOKHAVEN!": "#38BDF8" }
+    },
+    {
+      "id": "portaria",
+      "voz": "menino",
+      "texto": "De manhã, o prédio inteiro ganhou o menu de spawn! Os vizinhos trocavam de apartamento a cada cinco minutos e a síndica perdeu o controle da portaria.",
+      "ambiente": "brookhaven_portaria",
+      "hud_dias": "HORA 06 / 24",
+      "destaque": { "SPAWN!": "#5CE65C", "SÍNDICA": "#C084FC" }
+    },
+    {
+      "id": "cofre_tupperware",
+      "voz": "mae",
+      "texto": "De tarde, descobrimos um cofre secreto atrás do botijão de gás! Mas quem mexer no meu Tupperware lendário vai levar ban!",
+      "ambiente": "brookhaven_cofre",
+      "hud_dias": "HORA 14 / 24",
+      "destaque": { "COFRE": "#FFD426", "TUPPERWARE": "#FF66B2" }
+    },
+    {
+      "id": "perseguicao_noite",
+      "voz": "menino",
+      "texto": "Às dez da noite a síndica ativou o modo banir do servidor! Teve perseguição épica de patinete pela garagem inteira!",
+      "ambiente": "brookhaven_perseguicao",
+      "hud_dias": "HORA 22 / 24",
+      "destaque": { "BANIR": "#FF5733", "PATINETE": "#FFD426" }
+    },
+    {
+      "id": "desfecho",
+      "voz": "menino",
+      "texto": "À meia-noite o servidor reiniciou e tudo voltou ao normal, mas o carro do meu pai ainda está spawnado em cima da árvore!",
+      "ambiente": "brookhaven_desfecho",
+      "hud_dias": "HORA 24 / 24",
+      "destaque": { "REINICIOU": "#5CE65C", "ÁRVORE!": "#FFD426" }
+    },
+    {
+      "id": "cta",
+      "voz": "menino",
+      "texto": "Se você moraria nesse condomínio, se inscreve no Vida de Bloco e comenta BROOKHAVEN aqui embaixo!",
+      "ambiente": "brookhaven_cta",
+      "destaque": { "VIDA": "#FFD426", "BROOKHAVEN": "#5CE65C" }
+    }
+  ]
+}

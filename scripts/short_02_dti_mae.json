@@ -1,0 +1,44 @@
+{
+  "titulo": "E Se Sua MÃE Jogasse Dress To Impress na Vida Real? 👗😱 #robloxbrasil",
+  "formato": "short",
+  "marca_dagua": "PoxaRique!",
+  "arquivo_saida": "short_02_dti_mae_poxarique.mp4",
+  "cenas": [
+    {
+      "id": "hook",
+      "voz": "menino",
+      "texto": "Você tem dez segundos pro tema Churrasco de Domingo ou vai levar zero estrelas da sua mãe!",
+      "ambiente": "dti_hook",
+      "destaque": { "CHURRASCO": "#FFD426", "MÃE!": "#FF66B2" }
+    },
+    {
+      "id": "quarto_look",
+      "voz": "menino",
+      "texto": "Corri pro guarda-roupa, equipei camisa do Brasil, juliet e o chinelo lendário!",
+      "ambiente": "dti_quarto",
+      "destaque": { "BRASIL,": "#5CE65C", "CHINELO": "#FFD426" }
+    },
+    {
+      "id": "passarela_mae",
+      "voz": "mae",
+      "texto": "Nota um! Cadê a meia, cadê o casaco? Vai pegar friagem nessa passarela!",
+      "ambiente": "dti_passarela_mae",
+      "destaque": { "UM!": "#FF5733", "CASACO?": "#FFD426" }
+    },
+    {
+      "id": "passarela_vo",
+      "voz": "menino",
+      "texto": "Aí minha vó entrou usando um pano de prato como capa e ganhou cinco estrelas VIP na hora!",
+      "ambiente": "dti_passarela_vo",
+      "destaque": { "VÓ": "#FF66B2", "VIP": "#FFD426" }
+    },
+    {
+      "id": "cta",
+      "voz": "menino",
+      "texto": "Na casa da vó o VIP é outro nível! Comenta VIP se sua mãe também daria nota um!",
+      "ambiente": "dti_oof_cta",
+      "cta_palavra": "\"VIP\" 👇",
+      "destaque": { "VIP": "#FFD426", "MÃE": "#FF66B2" }
+    }
+  ]
+}

@@ -1450,4 +1450,171 @@ window.VB = window.VB || {};
 
     ctx.restore();
   };
+
+  // =========================================================================
+  // MOTORISTA DO ÔNIBUS ESCOLAR
+  // =========================================================================
+  VB.drawMotorista = function (ctx, opts = {}) {
+    const {
+      x = 0,
+      y = 0,
+      scale = 1,
+      expr = "neutral",
+      t = 0,
+      nametag = null,
+      flip = false,
+    } = opts;
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(flip ? -scale : scale, scale);
+
+    // Sombra no chão
+    ctx.fillStyle = "rgba(0,0,0,0.28)";
+    ctx.beginPath();
+    ctx.ellipse(0, 272, 110, 24, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Pernas (calça azul escura)
+    VB.celBox(ctx, -64, 168, 54, 96, 16, "#1E293B", 6, 0.24);
+    VB.celBox(ctx, 10, 168, 54, 96, 16, "#1E293B", 6, 0.24);
+    VB.celBox(ctx, -70, 244, 62, 30, 12, "#111827", 5.5, 0.2);
+    VB.celBox(ctx, 8, 244, 62, 30, 12, "#111827", 5.5, 0.2);
+
+    // Tronco (camisa azul claro de motorista + gravata)
+    VB.celBox(ctx, -78, 8, 156, 164, 28, "#38BDF8", 6, 0.24);
+    // Gravata azul marinho
+    ctx.fillStyle = "#1E3A8A";
+    ctx.strokeStyle = "#1A1423";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(-10, 16);
+    ctx.lineTo(10, 16);
+    ctx.lineTo(14, 95);
+    ctx.lineTo(0, 114);
+    ctx.lineTo(-14, 95);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Braços
+    VB.celBox(ctx, -124, 16, 44, 124, 20, "#38BDF8", 6, 0.22);
+    VB.celBox(ctx, -122, 126, 40, 34, 14, "#FAD4B0", 5.5, 0.2);
+    VB.celBox(ctx, 80, 16, 44, 124, 20, "#38BDF8", 6, 0.22);
+    VB.celBox(ctx, 82, 126, 40, 34, 14, "#FAD4B0", 5.5, 0.2);
+
+    // Cabeça 204x186 + Quepe de motorista
+    ctx.save();
+    ctx.translate(0, -106);
+    VB.celBox(ctx, -102, -88, 204, 186, 44, "#FAD4B0", 6, 0.24);
+    // Bigode
+    VB.celBox(ctx, -42, 32, 84, 20, 10, "#334155", 4.5, 0);
+    drawFace(ctx, expr, false, t);
+    // Quepe azul marinho
+    VB.celBox(ctx, -108, -124, 216, 56, 22, "#1E3A8A", 6, 0.24);
+    VB.celBox(ctx, -120, -76, 240, 20, 10, "#0F172A", 5, 0);
+    // Distintivo dourado no quepe
+    VB.celBox(ctx, -18, -112, 36, 24, 8, "#FACC15", 4, 0);
+    ctx.restore();
+
+    if (nametag) {
+      VB.drawNametag(ctx, 0, -278, nametag, "#38BDF8");
+    }
+
+    ctx.restore();
+  };
+
+  // =========================================================================
+  // SÍNDICA DO CONDOMÍNIO (com Megafone opcional)
+  // =========================================================================
+  VB.drawSindica = function (ctx, opts = {}) {
+    const {
+      x = 0,
+      y = 0,
+      scale = 1,
+      expr = "angry",
+      t = 0,
+      nametag = null,
+      flip = false,
+      megaphone = true,
+    } = opts;
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(flip ? -scale : scale, scale);
+
+    // Sombra no chão
+    ctx.fillStyle = "rgba(0,0,0,0.28)";
+    ctx.beginPath();
+    ctx.ellipse(0, 272, 110, 24, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Pernas
+    VB.celBox(ctx, -60, 168, 50, 96, 16, "#312E81", 6, 0.24);
+    VB.celBox(ctx, 10, 168, 50, 96, 16, "#312E81", 6, 0.24);
+    VB.celBox(ctx, -66, 244, 58, 30, 12, "#111827", 5.5, 0.2);
+    VB.celBox(ctx, 8, 244, 58, 30, 12, "#111827", 5.5, 0.2);
+
+    // Tronco (blazer roxo/vinho de síndica)
+    VB.celBox(ctx, -78, 8, 156, 164, 28, "#7E22CE", 6, 0.24);
+    VB.celBox(ctx, -24, 14, 48, 140, 12, "#F8FAFC", 4.5, 0);
+
+    // Braço esquerdo
+    VB.celBox(ctx, -124, 16, 44, 124, 20, "#7E22CE", 6, 0.22);
+    VB.celBox(ctx, -122, 126, 40, 34, 14, "#FAD4B0", 5.5, 0.2);
+
+    // Braço direito (segurando megafone ou normal)
+    if (megaphone) {
+      VB.celBox(ctx, 80, 10, 44, 110, 20, "#7E22CE", 6, 0.22);
+      VB.celBox(ctx, 84, -8, 40, 34, 14, "#FAD4B0", 5.5, 0.2);
+      // Megafone vermelho e branco
+      ctx.save();
+      ctx.translate(128, -45);
+      ctx.rotate(-0.15);
+      VB.celBox(ctx, -16, 12, 22, 38, 8, "#334155", 4.5, 0);
+      ctx.fillStyle = "#EF4444";
+      ctx.strokeStyle = "#1A1423";
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(-20, -14);
+      ctx.lineTo(54, -36);
+      ctx.lineTo(54, 36);
+      ctx.lineTo(-20, 14);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      VB.celBox(ctx, 48, -38, 14, 76, 6, "#F8FAFC", 4.5, 0);
+      ctx.restore();
+    } else {
+      VB.celBox(ctx, 80, 16, 44, 124, 20, "#7E22CE", 6, 0.22);
+      VB.celBox(ctx, 82, 126, 40, 34, 14, "#FAD4B0", 5.5, 0.2);
+    }
+
+    // Cabeça 204x186 + Coque de síndica + Óculos
+    ctx.save();
+    ctx.translate(0, -106);
+    // Coque no topo
+    VB.celBox(ctx, -44, -138, 88, 56, 26, "#475569", 6, 0.22);
+    VB.celBox(ctx, -102, -88, 204, 186, 44, "#FAD4B0", 6, 0.24);
+    drawFace(ctx, expr, false, t);
+    // Óculos retangulares da síndica
+    ctx.strokeStyle = "#1A1423";
+    ctx.lineWidth = 6;
+    ctx.fillStyle = "rgba(255,255,255,0.28)";
+    ctx.fillRect(-74, -34, 60, 42);
+    ctx.strokeRect(-74, -34, 60, 42);
+    ctx.fillRect(14, -34, 60, 42);
+    ctx.strokeRect(14, -34, 60, 42);
+    ctx.beginPath();
+    ctx.moveTo(-14, -14);
+    ctx.lineTo(14, -14);
+    ctx.stroke();
+    ctx.restore();
+
+    if (nametag) {
+      VB.drawNametag(ctx, 0, -296, nametag, "#C084FC");
+    }
+
+    ctx.restore();
+  };
 })(window.VB);

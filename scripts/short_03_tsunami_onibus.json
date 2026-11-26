@@ -1,0 +1,44 @@
+{
+  "titulo": "E Se o Ônibus Escolar Virasse um Tsunami do Roblox? 🌊🚌 #roblox",
+  "formato": "short",
+  "marca_dagua": "PoxaRique!",
+  "arquivo_saida": "short_03_tsunami_onibus_poxarique.mp4",
+  "cenas": [
+    {
+      "id": "hook",
+      "voz": "menino",
+      "texto": "O motorista avisou: quem não segurar na barra vai ser engolido pelo tsunami do Roblox!",
+      "ambiente": "tsunami_hook",
+      "destaque": { "TSUNAMI": "#38BDF8", "ROBLOX!": "#FFD426" }
+    },
+    {
+      "id": "fruta_mochila",
+      "voz": "menino",
+      "texto": "Eu comi a fruta da mochila pesada pra ganhar quinhentos quilos e não voar na curva!",
+      "ambiente": "tsunami_fruta",
+      "destaque": { "FRUTA": "#A855F7", "PESADA": "#FFD426" }
+    },
+    {
+      "id": "parkour_bancos",
+      "voz": "menino",
+      "texto": "Enquanto a onda subia pela janela, meu amigo fazia parkour impossível em cima dos bancos!",
+      "ambiente": "tsunami_parkour",
+      "destaque": { "ONDA": "#38BDF8", "PARKOUR": "#5CE65C" }
+    },
+    {
+      "id": "freada_brusca",
+      "voz": "menino",
+      "texto": "Na freada brusca, só quem tinha o passe do estudante mítico sobreviveu sentado!",
+      "ambiente": "tsunami_freada",
+      "destaque": { "FREADA": "#FF5733", "MÍTICO": "#FFD426" }
+    },
+    {
+      "id": "cta",
+      "voz": "menino",
+      "texto": "O motorista abriu a porta tranquilo: próxima parada, escola! Comenta ÔNIBUS se você sobreviveu!",
+      "ambiente": "tsunami_cta",
+      "cta_palavra": "\"ÔNIBUS\" 👇",
+      "destaque": { "ÔNIBUS": "#FFD426", "SOBREVIVEU!": "#5CE65C" }
+    }
+  ]
+}
