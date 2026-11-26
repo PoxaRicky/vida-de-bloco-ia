@@ -1,51 +1,44 @@
 {
-  "titulo": "E Se a Casa da Sua Vó Tivesse Regras de Videogame? 👵",
+  "titulo": "E Se a Casa da Sua Vó Tivesse Regras de Roblox? 👵",
   "formato": "short",
   "marca_dagua": "PoxaRique!",
   "arquivo_saida": "lote_03_vo_poxarique.mp4",
   "cenas": [
     {
       "id": "hook",
-      "voz": "mae",
-      "texto": "E se a casa da sua vó funcionasse com regras de videogame?",
-      "ambiente": "hook_sunburst",
-      "titulo_1": "E SE A CASA DA",
-      "titulo_2": "SUA VÓ",
-      "titulo_3": "TIVESSE REGRAS DE JOGO?",
-      "destaque": { "VÓ": "#FFD426", "VIDEOGAME?": "#5CE65C" }
+      "voz": "vo",
+      "texto": "Bem-vindo ao servidor da Vó! Aqui ninguém sai com fome, viu meu netinho?",
+      "ambiente": "vo_hook",
+      "destaque": { "SERVIDOR": "#FFD426", "VÓ!": "#FF66B2", "FOME,": "#5CE65C" }
     },
     {
-      "id": "choque",
+      "id": "prato_comida",
       "voz": "menino",
-      "texto": "Se você recusar o segundo prato de comida, sua vida cai pra zero!",
-      "ambiente": "boy_extreme_shock",
-      "destaque": { "COMIDA,": "#FFD426", "ZERO!": "#FF5733" }
+      "texto": "Regra um: se você recusar o segundo prato de comida, sua vida cai pra um por cento!",
+      "ambiente": "vo_prato_comida",
+      "destaque": { "SEGUNDO": "#FFD426", "VIDA": "#FF5733", "UM": "#FF5733" }
     },
     {
-      "id": "pro",
+      "id": "pote_sorvete",
       "voz": "menino",
-      "texto": "Mas se levar um pote de sorvete vazio, você desbloqueia mil de energia!",
-      "ambiente": "dia_quatro_obby",
-      "dia_topo": "BÔNUS",
-      "dia_num": "DA VÓ",
-      "destaque": { "SORVETE": "#FF66B2", "ENERGIA!": "#5CE65C" }
+      "texto": "Regra dois: todo pote de sorvete na geladeira tem noventa e nove por cento de chance de ser feijão!",
+      "ambiente": "vo_pote_sorvete",
+      "destaque": { "SORVETE": "#FF66B2", "FEIJÃO!": "#FFD426" }
     },
     {
-      "id": "street",
-      "voz": "menino",
-      "texto": "E ninguém pode ir embora antes de ganhar um abraço de chefe final!",
-      "ambiente": "caramelo_admin_street",
-      "sistema_1": "Missão da Vó concluída!",
-      "sistema_2": "Recompensa: Bolo de fubá infinito.",
-      "destaque": { "ABRAÇO": "#FF66B2", "FINAL!": "#FFD426" }
+      "id": "abraco_saida",
+      "voz": "vo",
+      "texto": "Pode parar aí no portão! Pra sair tem que dar um abraço e guardar cinquenta reais escondido!",
+      "ambiente": "vo_abraco_saida",
+      "destaque": { "ABRAÇO": "#FF66B2", "CINQUENTA": "#5CE65C", "ESCONDIDO!": "#FFD426" }
     },
     {
       "id": "cta",
-      "voz": "mae",
-      "texto": "Comenta VÓ se a sua também faz comida infinita!",
-      "ambiente": "mom_admin_closeup",
-      "cta_palavra": "\"VÓ\" ❤️",
-      "destaque": { "VÓ": "#FF66B2", "INFINITA!": "#FFD426" }
+      "voz": "menino",
+      "texto": "Comenta VÓ se a sua também tem poder infinito na cozinha!",
+      "ambiente": "vo_cta",
+      "cta_palavra": "\"VÓ\" 👵",
+      "destaque": { "VÓ": "#FF66B2", "INFINITO": "#FFD426" }
     }
   ]
 }

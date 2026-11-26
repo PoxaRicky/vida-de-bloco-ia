@@ -1,5 +1,5 @@
 {
-  "titulo": "E Se a ESCOLA INTEIRA Virasse um Parkour Impossível? 😱",
+  "titulo": "E Se a Sua Escola Virasse um Parkour no Roblox? 😱",
   "formato": "short",
   "marca_dagua": "PoxaRique!",
   "arquivo_saida": "lote_01_escola_poxarique.mp4",
@@ -7,43 +7,38 @@
     {
       "id": "hook",
       "voz": "menino",
-      "texto": "E se a sua escola inteira virasse um parkour impossível hoje?",
-      "ambiente": "hook_sunburst",
-      "titulo_1": "E SE A SUA",
-      "titulo_2": "ESCOLA",
-      "titulo_3": "VIRASSE UM PARKOUR?",
-      "destaque": { "ESCOLA": "#FFD426", "PARKOUR": "#5CE65C" }
+      "texto": "E se a sua escola inteira virasse um parkour mortal do Roblox?",
+      "ambiente": "escola_hook",
+      "destaque": { "ESCOLA": "#FFD426", "PARKOUR": "#5CE65C", "ROBLOX?": "#FF66B2" }
     },
     {
-      "id": "choque",
-      "voz": "menino",
-      "texto": "O corredor virou lava e a diretora tá cronometrando quem chega atrasado!",
-      "ambiente": "boy_extreme_shock",
-      "destaque": { "LAVA": "#FF5733", "DIRETORA": "#FFD426" }
+      "id": "corredor_lava",
+      "voz": "diretora",
+      "texto": "Quem pisar no chão leva zero! O corredor inteiro agora é lava!",
+      "ambiente": "escola_corredor_lava",
+      "destaque": { "ZERO!": "#FFD426", "LAVA!": "#FF5733" }
     },
     {
-      "id": "quedas",
+      "id": "sala_acido",
       "voz": "menino",
-      "texto": "Na primeira aula de matemática, metade da sala já caiu no vazio!",
-      "ambiente": "obby_lava_fall",
-      "destaque": { "MATEMÁTICA,": "#FFD426", "VAZIO!": "#FF5733" }
+      "texto": "Na aula de matemática, quem erra a tabuada cai direto no ácido verde!",
+      "ambiente": "escola_sala_matematica",
+      "destaque": { "MATEMÁTICA,": "#FFD426", "ÁCIDO": "#5CE65C", "VERDE!": "#5CE65C" }
     },
     {
-      "id": "recreio",
+      "id": "cantina_obby",
       "voz": "menino",
-      "texto": "No recreio, quem zerar o pátio ganha dois salgados grátis na cantina!",
-      "ambiente": "dia_quatro_obby",
-      "dia_topo": "RECREIO",
-      "dia_num": "VALENDO",
-      "destaque": { "RECREIO,": "#5CE65C", "SALGADOS": "#FFD426" }
+      "texto": "No recreio, só quem zera o pátio desbloqueia coxinha lendária na cantina!",
+      "ambiente": "escola_recreio_patio",
+      "destaque": { "COXINHA": "#FFD426", "LENDÁRIA": "#FF66B2" }
     },
     {
       "id": "cta",
       "voz": "menino",
-      "texto": "Comenta ESCOLA se você passaria de ano nesse mapa!",
-      "ambiente": "mom_admin_closeup",
-      "cta_palavra": "\"ESCOLA\" 👇",
-      "destaque": { "ESCOLA": "#FFD426", "MAPA!": "#5CE65C" }
+      "texto": "Comenta ESCOLA se você passaria de ano nesse servidor!",
+      "ambiente": "escola_cta",
+      "cta_palavra": "\"ESCOLA\" 🏫",
+      "destaque": { "ESCOLA": "#FFD426", "SERVIDOR!": "#5CE65C" }
     }
   ]
 }

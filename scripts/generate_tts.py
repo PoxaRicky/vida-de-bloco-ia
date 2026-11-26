@@ -6,29 +6,56 @@ from pathlib import Path
 
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY", "").strip()
 
-VOICE_MAP_EDGE = {
-    "menino": "pt-BR-AntonioNeural",
-    "narrador": "pt-BR-AntonioNeural",
-    "mae": "pt-BR-FranciscaNeural",
+VOICE_CONFIG_EDGE = {
+    "menino":   {"voice": "pt-BR-AntonioNeural",             "rate": "+16%", "pitch": "+4Hz"},
+    "narrador": {"voice": "pt-BR-AntonioNeural",             "rate": "+14%", "pitch": "-2Hz"},
+    "mae":      {"voice": "pt-BR-FranciscaNeural",           "rate": "+12%", "pitch": "+0Hz"},
+    "vo":       {"voice": "pt-BR-ThalitaMultilingualNeural", "rate": "+4%",  "pitch": "-7Hz"},
+    "diretora": {"voice": "pt-BR-FranciscaNeural",           "rate": "+8%",  "pitch": "-5Hz"},
 }
 
 VOICE_MAP_ELEVEN = {
     "menino": "pNInz6obpgDQGcFmaJgB",
     "narrador": "pNInz6obpgDQGcFmaJgB",
     "mae": "EXAVITQu4vr4xnSDxMaL",
+    "vo": "EXAVITQu4vr4xnSDxMaL",
+    "diretora": "EXAVITQu4vr4xnSDxMaL",
 }
 
 
-async def generate_edge_tts(text: str, out_path: Path, speaker: str = "narrador") -> None:
+async def generate_edge_tts_with_words(text: str, out_path: Path, speaker: str = "narrador") -> list[dict]:
     import edge_tts
 
-    voice = VOICE_MAP_EDGE.get(speaker, "pt-BR-AntonioNeural")
-    rate = "+16%" if speaker != "mae" else "+12%"
-    communicate = edge_tts.Communicate(text, voice, rate=rate)
-    await communicate.save(str(out_path))
+    cfg = VOICE_CONFIG_EDGE.get(speaker, VOICE_CONFIG_EDGE["narrador"])
+    communicate = edge_tts.Communicate(
+        text,
+        cfg["voice"],
+        rate=cfg["rate"],
+        pitch=cfg["pitch"],
+        boundary="WordBoundary",
+    )
+
+    words: list[dict] = []
+    audio_chunks: list[bytes] = []
+
+    async for chunk in communicate.stream():
+        ctype = chunk.get("type")
+        if ctype == "audio":
+            audio_chunks.append(chunk["data"])
+        elif ctype == "WordBoundary":
+            start_sec = round(chunk["offset"] / 10_000_000, 4)
+            dur_sec = round(chunk["duration"] / 10_000_000, 4)
+            words.append({
+                "text": chunk["text"],
+                "startSec": start_sec,
+                "endSec": round(start_sec + dur_sec, 4),
+            })
+
+    out_path.write_bytes(b"".join(audio_chunks))
+    return words
 
 
-def generate_elevenlabs_tts(text: str, out_path: Path, speaker: str = "narrador") -> None:
+def generate_elevenlabs_tts(text: str, out_path: Path, speaker: str = "narrador") -> list[dict]:
     import urllib.request
 
     voice_id = VOICE_MAP_ELEVEN.get(speaker, "pNInz6obpgDQGcFmaJgB")
@@ -47,6 +74,7 @@ def generate_elevenlabs_tts(text: str, out_path: Path, speaker: str = "narrador"
     req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
     with urllib.request.urlopen(req) as resp:
         out_path.write_bytes(resp.read())
+    return []
 
 
 async def main() -> None:
@@ -55,26 +83,44 @@ async def main() -> None:
         sys.exit(1)
 
     script_path = Path(sys.argv[1])
+    slug = script_path.stem
     data = json.loads(script_path.read_text(encoding="utf-8"))
 
-    audio_dir = Path("output/audio")
+    # Pasta isolada por roteiro para NUNCA misturar áudio de um vídeo com outro!
+    audio_dir = Path("output/audio") / slug
     audio_dir.mkdir(parents=True, exist_ok=True)
 
     for old in audio_dir.glob("cena_*.mp3"):
         old.unlink()
+
+    manifest_scenes = []
 
     for idx, scene in enumerate(data["cenas"]):
         out_file = audio_dir / f"cena_{idx:02d}.mp3"
         text = scene["texto"]
         speaker = scene.get("voz", "narrador")
         if ELEVENLABS_API_KEY:
-            print(f"[ElevenLabs:{speaker}] Cena {idx}: {text[:45]}...")
-            generate_elevenlabs_tts(text, out_file, speaker)
+            print(f"[{slug} | ElevenLabs:{speaker}] Cena {idx}: {text[:50]}...")
+            words = generate_elevenlabs_tts(text, out_file, speaker)
         else:
-            print(f"[Edge-TTS:{speaker}] Cena {idx}: {text[:45]}...")
-            await generate_edge_tts(text, out_file, speaker)
+            print(f"[{slug} | Edge-TTS:{speaker}] Cena {idx}: {text[:50]}...")
+            words = await generate_edge_tts_with_words(text, out_file, speaker)
 
-    print(f"Áudios gerados em {audio_dir}")
+        manifest_scenes.append({
+            "idx": idx,
+            "id": scene.get("id", f"cena_{idx}"),
+            "voz": speaker,
+            "texto": text,
+            "audioFile": str(out_file.as_posix()),
+            "words": words,
+        })
+
+    manifest_path = audio_dir / "manifest.json"
+    manifest_path.write_text(
+        json.dumps({"slug": slug, "titulo": data.get("titulo", ""), "cenas": manifest_scenes}, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    print(f"Áudios e timestamps de palavras salvos em {audio_dir}")
 
 
 if __name__ == "__main__":

@@ -190,10 +190,11 @@ window.VB = window.VB || {};
     ctx.fillStyle = skyG;
     ctx.fillRect(0, 0, W, roadY);
 
-    // Sol quadrado amarelo + nuvens em blocos
-    VB.celBox(ctx, W * 0.45, 70 * S + 40, 105 * S, 105 * S, 6, "#FFEE38", 6, 0.15);
-    VB.celBox(ctx, W * 0.56, 60 * S + 40, 160 * S, 48 * S, 4, "#FFFFFF", 5, 0);
-    VB.celBox(ctx, W * 0.14, 110 * S + 40, 165 * S, 46 * S, 4, "#FFFFFF", 5, 0);
+    // Sol quadrado amarelo + nuvens em blocos (abaixo da zona de HUD nos Shorts)
+    const skyBaseY = W > H ? 40 : 275;
+    VB.celBox(ctx, W * 0.45, 70 * S + skyBaseY, 105 * S, 105 * S, 6, "#FFEE38", 6, 0.15);
+    VB.celBox(ctx, W * 0.56, 60 * S + skyBaseY, 160 * S, 48 * S, 4, "#FFFFFF", 5, 0);
+    VB.celBox(ctx, W * 0.14, 95 * S + skyBaseY, 165 * S, 46 * S, 4, "#FFFFFF", 5, 0);
 
     const hScale = S;
     const cx = W / 2;
@@ -690,6 +691,504 @@ window.VB = window.VB || {};
         "#FF66B2",
         18
       );
+    } else if (envName === "escola_hook") {
+      drawSunburst(ctx, W, H, t, "#DC2626", "#7F1D1D");
+      // Portão escolar em blocos ao fundo
+      VB.celBox(ctx, W * 0.1, H * 0.36, 90 * S, 520 * S, 10, "#475569", 6, 0.25);
+      VB.celBox(ctx, W * 0.9 - 90 * S, H * 0.36, 90 * S, 520 * S, 10, "#475569", 6, 0.25);
+      VB.celBox(ctx, W * 0.08, H * 0.31, W * 0.84, 78 * S, 16, "#1E293B", 6, 0);
+      strokedText(ctx, "ESCOLA ESTADUAL OBBY", W / 2, H * 0.33, Math.round(38 * S), "#FFD426", 8);
+
+      const z = (2.25 + Math.min(0.16, t * 0.08)) * S;
+      VB.drawBoy(ctx, { x: W * 0.5, y: H * 0.73, scale: z, expr: "shocked_extreme", pose: "closeup", backpack: true, t });
+      strokedText(ctx, "E SE A SUA", W / 2, H * 0.105, Math.round(64 * S), "#FFFFFF", 14);
+      strokedText(ctx, "ESCOLA", W / 2, H * 0.175, Math.round(124 * S), "#FFD426", 18);
+      strokedText(ctx, "VIRASSE PARKOUR?", W / 2, H * 0.245, Math.round(54 * S), "#5CE65C", 12);
+    } else if (envName === "escola_corredor_lava") {
+      // Corredor escolar com armários azuis + chão de lava borbulhante + plataformas de basalto
+      const lavaY = H * 0.68;
+      const wallG = ctx.createLinearGradient(0, 0, 0, lavaY);
+      wallG.addColorStop(0, "#1E293B");
+      wallG.addColorStop(1, "#334155");
+      ctx.fillStyle = wallG;
+      ctx.fillRect(0, 0, W, lavaY);
+
+      for (let i = 0; i < 4; i++) {
+        const lx = 36 + i * 258;
+        VB.celBox(ctx, lx, H * 0.24, 228, 460, 12, "#2563EB", 6, 0.22);
+        VB.celBox(ctx, lx + 28, H * 0.28, 172, 16, 6, "#1D4ED8", 4, 0);
+        VB.celBox(ctx, lx + 28, H * 0.31, 172, 16, 6, "#1D4ED8", 4, 0);
+        VB.celBox(ctx, lx + 178, H * 0.44, 20, 48, 8, "#FACC15", 4, 0);
+      }
+
+      // Rio de lava incandescente + zona escura embaixo p/ legenda
+      const lavaG = ctx.createLinearGradient(0, lavaY, 0, H);
+      lavaG.addColorStop(0, "#FF6B00");
+      lavaG.addColorStop(0.32, "#EA580C");
+      lavaG.addColorStop(0.75, "#7C2D12");
+      lavaG.addColorStop(1, "#1F1224");
+      ctx.fillStyle = lavaG;
+      ctx.fillRect(0, lavaY, W, H - lavaY);
+
+      for (let b = 0; b < 9; b++) {
+        const bx = 90 + b * 112;
+        const by = lavaY + 34 + Math.sin(t * 6 + b * 1.3) * 18;
+        ctx.beginPath();
+        ctx.arc(bx, by, 18 + (b % 3) * 7, 0, Math.PI * 2);
+        ctx.fillStyle = b % 2 === 0 ? "#FFD426" : "#FF9E00";
+        ctx.fill();
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = OUTLINE;
+        ctx.stroke();
+      }
+
+      // Plataformas de basalto do Obby
+      VB.celBox(ctx, 50, lavaY - 40, 390, 74, 16, "#3F3F46", 6, 0.24);
+      VB.celBox(ctx, 610, lavaY - 68, 410, 74, 16, "#3F3F46", 6, 0.24);
+
+      VB.drawDiretora(ctx, {
+        x: 245,
+        y: lavaY - 235,
+        scale: 1.05 * S,
+        expr: "scream",
+        megaphone: true,
+        stopwatch: true,
+        nametag: "[ADM] Diretora_Brava",
+        t,
+      });
+
+      const jumpArc = Math.abs(Math.sin(t * 7.5)) * 95;
+      VB.drawBoy(ctx, {
+        x: 810,
+        y: lavaY - 265 - jumpArc,
+        scale: 1.02 * S,
+        expr: "shocked_extreme",
+        pose: "cheer",
+        backpack: true,
+        nametag: "Você (Atrasado)",
+        t,
+      });
+
+      // Cronômetro Speedrun no topo direito
+      VB.celBox(ctx, W - 365, 86, 330, 82, 22, "#16182D", 6, 0);
+      const secLeft = Math.max(0.1, 5.0 - t).toFixed(2);
+      strokedText(ctx, `⏱ 00:0${secLeft}`, W - 200, 128, 42, "#FF5733", 8);
+    } else if (envName === "escola_sala_matematica") {
+      // Sala de aula com lousa de tabuada bem separada da nametag + carteiras sobre ácido verde
+      const acidY = H * 0.71;
+      ctx.fillStyle = "#3B2F4A";
+      ctx.fillRect(0, 0, W, acidY);
+
+      // Lousa escolar verde no alto (abaixo do HUD)
+      VB.celBox(ctx, W * 0.08, 305, W * 0.84, 240, 18, "#14532D", 8, 0.14);
+      VB.celBox(ctx, W * 0.06, 535, W * 0.88, 24, 8, "#92400E", 6, 0.2);
+      strokedText(ctx, "7 x 8 = ?   (ERROU = ÁCIDO!)", W / 2, 415, Math.round(42 * S), "#FFFFFF", 9);
+
+      // Poço de ácido radioativo verde + base escura p/ legenda
+      const acidG = ctx.createLinearGradient(0, acidY, 0, H);
+      acidG.addColorStop(0, "#84CC16");
+      acidG.addColorStop(0.28, "#16A34A");
+      acidG.addColorStop(0.75, "#14532D");
+      acidG.addColorStop(1, "#0E1726");
+      ctx.fillStyle = acidG;
+      ctx.fillRect(0, acidY, W, H - acidY);
+
+      for (let b = 0; b < 10; b++) {
+        const bx = 80 + b * 102;
+        const rise = (t * 75 + b * 29) % 130;
+        ctx.beginPath();
+        ctx.arc(bx, acidY + 50 - rise * 0.6, 15 + (b % 3) * 5, 0, Math.PI * 2);
+        ctx.fillStyle = "#BEF264";
+        ctx.fill();
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = OUTLINE;
+        ctx.stroke();
+      }
+
+      // Carteiras flutuantes como blocos de Obby
+      [180, 540, 890].forEach((dx, di) => {
+        const fy = acidY - 52 + Math.sin(t * 4 + di * 1.6) * 14;
+        VB.celBox(ctx, dx - 125, fy, 250, 46, 12, "#D97706", 6, 0.22);
+      });
+
+      VB.drawBoy(ctx, {
+        x: 540 + Math.sin(t * 9) * 14,
+        y: acidY - 245 + Math.sin(t * 4 + 1.6) * 14,
+        scale: 1.02 * S,
+        expr: "shocked_extreme",
+        pose: "cheer",
+        backpack: true,
+        hp: 35,
+        nametag: "Prova_Mortal",
+        t,
+      });
+
+      // HUD Stage
+      VB.celBox(ctx, W * 0.1, 180, W * 0.8, 92, 24, "#16182D", 6, 0);
+      strokedText(ctx, "⚙ STAGE 2/10 — AULA DE MATEMÁTICA", W / 2, 227, 35, "#5CE65C", 8);
+    } else if (envName === "escola_recreio_patio") {
+      const horizonY = H * 0.62;
+      const skyG = ctx.createLinearGradient(0, 0, 0, horizonY);
+      skyG.addColorStop(0, "#0284C7");
+      skyG.addColorStop(1, "#7DD3FC");
+      ctx.fillStyle = skyG;
+      ctx.fillRect(0, 0, W, horizonY);
+
+      drawCheckerFloor(ctx, W, H, horizonY, t);
+
+      // Barraca da Cantina VIP mais alta e à esquerda p/ letreiro 100% visível
+      VB.celBox(ctx, 56, horizonY - 430, 360, 430, 14, "#FDE68A", 6, 0.16);
+      VB.celBox(ctx, 42, horizonY - 455, 388, 68, 14, "#EF4444", 6, 0.2);
+      strokedText(ctx, "CANTINA VIP", 236, horizonY - 420, 40, "#FFD426", 8);
+
+      // Pedestal de Checkpoint + Coxinha Lendária brilhante
+      VB.isoCube(ctx, 820, horizonY + 25, 185, "#FFE566", "#FFD426", "#D97706", 6);
+      const coxY = horizonY - 150 + Math.sin(t * 5) * 16;
+      ctx.save();
+      ctx.translate(820, coxY);
+      ctx.beginPath();
+      ctx.moveTo(0, -74);
+      ctx.bezierCurveTo(64, -10, 64, 64, 0, 64);
+      ctx.bezierCurveTo(-64, 64, -64, -10, 0, -74);
+      ctx.fillStyle = "#F59E0B";
+      ctx.fill();
+      ctx.lineWidth = 7;
+      ctx.strokeStyle = OUTLINE;
+      ctx.stroke();
+      strokedText(ctx, "✨ COXINHA", 0, -104, 30, "#FFD426", 7);
+      ctx.restore();
+
+      const jump = Math.abs(Math.sin(t * 8)) * 45;
+      VB.drawBoy(ctx, {
+        x: 470,
+        y: horizonY - 25 - jump,
+        scale: 1.08 * S,
+        expr: "star_eyes",
+        pose: "cheer",
+        backpack: true,
+        nametag: "Zerou_O_Pátio",
+        t,
+      });
+
+      VB.celBox(ctx, W * 0.08, 180, W * 0.84, 108, 26, "#16182D", 6, 0);
+      strokedText(ctx, "🏆 CHECKPOINT DESBLOQUEADO!", W / 2, 218, 36, "#FFD426", 8);
+      strokedText(ctx, "+1 Coxinha Lendária (+100 Stamina)", W / 2, 262, 34, "#5CE65C", 7);
+    } else if (envName === "escola_cta") {
+      drawSunburst(ctx, W, H, t, "#2563EB", "#1E1B4B");
+      drawSpeedLines(ctx, W, H, t);
+      VB.drawDiretora(ctx, { x: W * 0.28, y: H * 0.56, scale: 1.18 * S, expr: "shocked_extreme", stopwatch: true, t });
+      VB.drawBoy(ctx, { x: W * 0.71, y: H * 0.56, scale: 1.24 * S, expr: "star_eyes", pose: "cheer", backpack: true, nametag: "Nota_10", t });
+      strokedText(ctx, "COMENTA:", W / 2, H * 0.11, Math.round(76 * S), "#FFFFFF", 15);
+      strokedText(ctx, cena.cta_palavra || "\"ESCOLA\" 🏫", W / 2, H * 0.19, Math.round(114 * S), "#FFD426", 18);
+    } else if (envName === "pix_hook") {
+      drawSunburst(ctx, W, H, t, "#10B981", "#064E3B");
+      for (let c = 0; c < 8; c++) {
+        const seed = (c * 73) % 97;
+        const cx = 110 + c * 122 + Math.sin(t * 3 + seed) * 18;
+        const cy = H * 0.62 - ((t * 140 + seed * 8) % 520);
+        const flip = Math.max(0.25, Math.abs(Math.cos(t * 6 + c)));
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.scale(flip, 1);
+        ctx.beginPath();
+        ctx.arc(0, 0, 38, 0, Math.PI * 2);
+        ctx.fillStyle = "#FFD426";
+        ctx.fill();
+        ctx.lineWidth = 6;
+        ctx.strokeStyle = OUTLINE;
+        ctx.stroke();
+        strokedText(ctx, "$", 0, 2, 38, "#92400E", 0);
+        ctx.restore();
+      }
+      VB.celBox(ctx, W * 0.14, H * 0.295, W * 0.72, 88, 24, "#16182D", 6, 0);
+      const val = 1 + Math.floor(t * 12);
+      strokedText(ctx, `💸 Pix recebido: +R$ ${val},00`, W / 2, H * 0.318, 40, "#5CE65C", 8);
+
+      const z = (2.22 + Math.min(0.16, t * 0.08)) * S;
+      VB.drawBoy(ctx, { x: W * 0.5, y: H * 0.73, scale: z, expr: "star_eyes", pose: "closeup", goldenShoes: true, t });
+      strokedText(ctx, "E SE CADA PASSO", W / 2, H * 0.105, Math.round(62 * S), "#FFFFFF", 14);
+      strokedText(ctx, "DESSE 1 REAL", W / 2, H * 0.175, Math.round(108 * S), "#FFD426", 18);
+      strokedText(ctx, "NO PIX NA HORA?", W / 2, H * 0.242, Math.round(54 * S), "#5CE65C", 12);
+    } else if (envName === "pix_sala_madrugada") {
+      // Sala brasileira às 03:14 da manhã
+      const floorY = H * 0.68;
+      for (let x = 0, i = 0; x < W; x += 84, i++) {
+        ctx.fillStyle = i % 2 === 0 ? "#1E1B4B" : "#27235E";
+        ctx.fillRect(x, 0, 85, floorY);
+      }
+      ctx.fillStyle = "#13112B";
+      ctx.fillRect(0, floorY, W, H - floorY);
+      ctx.beginPath();
+      ctx.moveTo(0, floorY);
+      ctx.lineTo(W, floorY);
+      ctx.lineWidth = 7;
+      ctx.strokeStyle = OUTLINE;
+      ctx.stroke();
+
+      // Janela noturna com lua (abaixo do HUD)
+      VB.celBox(ctx, W - 360, 338, 290, 230, 14, "#F8FAFC", 6, 0);
+      ctx.fillStyle = "#0F172A";
+      ctx.fillRect(W - 342, 356, 254, 194);
+      ctx.beginPath();
+      ctx.arc(W - 215, 430, 36, 0, Math.PI * 2);
+      ctx.fillStyle = "#FEF08A";
+      ctx.fill();
+
+      // Sofá no meio da sala
+      VB.celBox(ctx, 180, floorY - 180, 420, 175, 28, "#7C3AED", 6, 0.22);
+
+      const runX = 330 + Math.sin(t * 9) * 145;
+      const bounce = Math.abs(Math.cos(t * 18)) * 34;
+      VB.drawBoy(ctx, {
+        x: runX,
+        y: floorY - 190 - bounce,
+        scale: 1.08 * S,
+        expr: "star_eyes",
+        pose: "cheer",
+        goldenShoes: true,
+        nametag: "+R$1 +R$1 +R$1",
+        t,
+      });
+
+      VB.drawMom(ctx, {
+        x: 825,
+        y: floorY - 185,
+        scale: 1.12 * S,
+        expr: "scream",
+        pose: "stand",
+        nametag: "Mãe (Acordou 03:14)",
+        t,
+      });
+
+      VB.celBox(ctx, W * 0.08, 180, W * 0.84, 112, 26, "#16182D", 6, 0);
+      const steps = 4820 + Math.floor(t * 28);
+      strokedText(ctx, `📱 03:14 DA MANHÃ • Passos: ${steps}`, W / 2, 219, 35, "#FFFFFF", 7);
+      strokedText(ctx, `💸 Saldo Pix: R$ ${steps},00`, W / 2, 263, 40, "#5CE65C", 8);
+    } else if (envName === "pix_padaria") {
+      const roadY = H * 0.66;
+      drawBrazilianNeighborhood(ctx, W, H, roadY, S);
+
+      // Esteira ergométrica na porta da padaria!
+      VB.celBox(ctx, 110, roadY + 38, 390, 56, 18, "#1E293B", 6, 0.2);
+      VB.celBox(ctx, 430, roadY - 140, 26, 185, 10, "#475569", 6, 0.2);
+      VB.celBox(ctx, 395, roadY - 160, 96, 36, 10, "#0F172A", 5, 0);
+
+      const stepBounce = Math.abs(Math.sin(t * 16)) * 28;
+      VB.drawBoy(ctx, {
+        x: 295,
+        y: roadY - 210 - stepBounce,
+        scale: 1.06 * S,
+        expr: "star_eyes",
+        pose: "cheer",
+        goldenShoes: true,
+        breadBag: true,
+        nametag: "Esteira_Infinita",
+        t,
+      });
+
+      VB.drawPadeiro(ctx, {
+        x: 785,
+        y: roadY - 195,
+        scale: 1.08 * S,
+        expr: "shocked_extreme",
+        nametag: "Seu_Zé_Padeiro",
+        t,
+      });
+
+      VB.celBox(ctx, W * 0.07, 188, W * 0.86, 116, 26, "#16182D", 6, 0);
+      strokedText(ctx, "🧾 COMPRA APROVADA NO PASSO-PAY", W / 2, 228, 35, "#FFD426", 8);
+      strokedText(ctx, "400 Pães de Queijo = 1.200 Passos!", W / 2, 274, 37, "#5CE65C", 8);
+    } else if (envName === "pix_brasil_correndo") {
+      const roadY = H * 0.65;
+      drawBrazilianNeighborhood(ctx, W, H, roadY, S);
+
+      const b1 = Math.abs(Math.sin(t * 15)) * 34;
+      const b2 = Math.abs(Math.cos(t * 15)) * 34;
+      VB.drawMom(ctx, { x: 215, y: roadY - 185 - b2, scale: 0.94 * S, expr: "star_eyes", pose: "cheer", nametag: "Mãe_Corredora", t });
+      VB.drawBoy(ctx, { x: 535, y: roadY - 175 - b1, scale: 1.02 * S, expr: "happy", pose: "cheer", goldenShoes: true, nametag: "Você_Turbo", t });
+      VB.drawCaramelo(ctx, { x: 845, y: roadY - 95 - b2, scale: 1.08 * S, sunglasses: true, pose: "cheer", nametag: "Caramelo_Pix", t });
+
+      VB.celBox(ctx, W * 0.06, 186, W * 0.88, 128, 28, "#16182D", 6, 0);
+      strokedText(ctx, "⚙ ALERTA CRÍTICO — SISTEMA PIX 🔥", W / 2, 228, 36, "#FF5733", 8);
+      strokedText(ctx, "213 milhões correndo • Servidor travou!", W / 2, 278, 36, "#FFD426", 8);
+    } else if (envName === "pix_cta") {
+      drawSunburst(ctx, W, H, t, "#F59E0B", "#78350F");
+      drawSpeedLines(ctx, W, H, t);
+      VB.drawBoy(ctx, { x: W * 0.5, y: H * 0.55, scale: 1.48 * S, expr: "star_eyes", pose: "cheer", goldenShoes: true, breadBag: true, nametag: "👑 Magnata_Do_Pix", t });
+      strokedText(ctx, "COMENTA:", W / 2, H * 0.11, Math.round(76 * S), "#FFFFFF", 15);
+      strokedText(ctx, cena.cta_palavra || "\"PIX\" 💸", W / 2, H * 0.19, Math.round(122 * S), "#5CE65C", 18);
+    } else if (envName === "vo_hook") {
+      drawSunburst(ctx, W, H, t, "#9333EA", "#4C1D95");
+      const z = (2.18 + Math.min(0.15, t * 0.08)) * S;
+      VB.drawVovo(ctx, {
+        x: W * 0.5,
+        y: H * 0.74,
+        scale: z,
+        expr: "happy",
+        pose: "closeup",
+        crown: true,
+        holdingPot: true,
+        t,
+      });
+      VB.celBox(ctx, W * 0.16, H * 0.292, W * 0.68, 72, 22, "#16182D", 5.5, 0);
+      strokedText(ctx, "👑 [OWNER] Vó_Admin • Lvl 999", W / 2, H * 0.312, 35, "#FFD426", 7);
+
+      strokedText(ctx, "E SE A CASA DA", W / 2, H * 0.105, Math.round(62 * S), "#FFFFFF", 14);
+      strokedText(ctx, "SUA VÓ", W / 2, H * 0.175, Math.round(118 * S), "#FF66B2", 18);
+      strokedText(ctx, "TIVESSE REGRAS ROBLOX?", W / 2, H * 0.242, Math.round(46 * S), "#FFD426", 12);
+    } else if (envName === "vo_prato_comida") {
+      // Sala de jantar aconchegante da Vó + mesa com montanha colossal de comida
+      const floorY = H * 0.68;
+      const wallG = ctx.createLinearGradient(0, 0, 0, floorY);
+      wallG.addColorStop(0, "#7C2D12");
+      wallG.addColorStop(1, "#9A3412");
+      ctx.fillStyle = wallG;
+      ctx.fillRect(0, 0, W, floorY);
+
+      ctx.fillStyle = "#291816";
+      ctx.fillRect(0, floorY, W, H - floorY);
+
+      // Quadrinho de crochê na parede
+      VB.celBox(ctx, W * 0.38, 340, 260, 170, 18, "#FEF3C7", 6, 0.12);
+      strokedText(ctx, "LAR DOCE LAR ♥", W * 0.5, 425, 28, "#BE123C", 0);
+
+      VB.drawVovo(ctx, {
+        x: 255,
+        y: floorY - 190,
+        scale: 1.12 * S,
+        expr: "happy",
+        woodenSpoon: true,
+        nametag: "Vó_Cozinheira",
+        t,
+      });
+
+      VB.drawBoy(ctx, {
+        x: 825 + Math.sin(t * 36) * 5,
+        y: floorY - 185,
+        scale: 1.08 * S,
+        expr: "shocked_extreme",
+        hp: 5,
+        nametag: "Neto (99% Cheio)",
+        t,
+      });
+
+      // Mesa com toalha xadrez + Montanha gigante de arroz e feijão no meio
+      VB.celBox(ctx, 295, floorY - 78, 490, 145, 20, "#DC2626", 6, 0.22);
+      VB.celBox(ctx, 315, floorY - 68, 450, 34, 10, "#FEF2F2", 5, 0);
+      // Prato + montanha de comida
+      ctx.beginPath();
+      ctx.arc(540, floorY - 108, 108, Math.PI, Math.PI * 2);
+      ctx.fillStyle = "#F8FAFC";
+      ctx.fill();
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = OUTLINE;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(540, floorY - 132, 76, Math.PI, Math.PI * 2);
+      ctx.fillStyle = "#78350F";
+      ctx.fill();
+      ctx.stroke();
+      VB.celBox(ctx, 430, floorY - 108, 220, 26, 12, "#E2E8F0", 6, 0);
+
+      // HUD Barra de Vida Crítica no topo
+      VB.celBox(ctx, W * 0.07, 186, W * 0.86, 120, 26, "#16182D", 6, 0);
+      strokedText(ctx, "❤ VIDA: 1% — DANO CRÍTICO!", W / 2, 228, 38, "#FF5733", 8);
+      strokedText(ctx, "Motivo: Tentou recusar o 2º prato da Vó", W / 2, 274, 33, "#FFD426", 7);
+    } else if (envName === "vo_pote_sorvete") {
+      // Cozinha da Vó com geladeira aberta brilhando + Pote de Sorvete Napolitano revelando Feijão!
+      const benchY = H * 0.66;
+      ctx.fillStyle = "#4A1D4A";
+      ctx.fillRect(0, 0, W, benchY);
+      ctx.fillStyle = "#231229";
+      ctx.fillRect(0, benchY, W, H - benchY);
+
+      // Geladeira aberta à esquerda emitindo brilho dourado
+      VB.celBox(ctx, 55, 360, 330, 640, 24, "#F8FAFC", 7, 0.16);
+      VB.celBox(ctx, 82, 395, 276, 560, 16, "#FEF08A", 5, 0);
+
+      // Pote de Sorvete 2L gigante sobre a bancada abrindo a tampa!
+      const lidLift = Math.min(85, 20 + Math.abs(Math.sin(t * 4)) * 65);
+      VB.celBox(ctx, 355, benchY - 220, 350, 225, 28, "#F8FAFC", 7, 0.2);
+      VB.celBox(ctx, 375, benchY - 160, 310, 82, 14, "#F472B6", 5, 0);
+      strokedText(ctx, "SORVETE 2L", 530, benchY - 118, 38, "#FFFFFF", 7);
+
+      // Conteúdo marrom de Feijão saindo do pote!
+      ctx.beginPath();
+      ctx.ellipse(530, benchY - 222, 152, 42, 0, 0, Math.PI * 2);
+      ctx.fillStyle = "#78350F";
+      ctx.fill();
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = OUTLINE;
+      ctx.stroke();
+
+      // Tampa subindo
+      ctx.save();
+      ctx.translate(530, benchY - 275 - lidLift);
+      ctx.rotate(-0.14);
+      VB.celBox(ctx, -185, -20, 370, 38, 14, "#EC4899", 6, 0.2);
+      ctx.restore();
+
+      VB.drawBoy(ctx, {
+        x: 875,
+        y: benchY - 180,
+        scale: 1.06 * S,
+        expr: "shocked_extreme",
+        nametag: "Iludido_De_Novo",
+        t,
+      });
+
+      VB.celBox(ctx, W * 0.06, 186, W * 0.88, 122, 26, "#16182D", 6, 0);
+      strokedText(ctx, "✨ BAÚ MÍTICO ABERTO NA GELADEIRA", W / 2, 226, 34, "#FF66B2", 8);
+      strokedText(ctx, "Item obtido: 🫘 Feijão Congelado (99%)", W / 2, 274, 36, "#FFD426", 8);
+    } else if (envName === "vo_abraco_saida") {
+      // Portão com barreira laser roxa de Boss + Vó dando abraço e R$50 escondido!
+      const roadY = H * 0.67;
+      const skyG = ctx.createLinearGradient(0, 0, 0, roadY);
+      skyG.addColorStop(0, "#3B0764");
+      skyG.addColorStop(1, "#6B21A8");
+      ctx.fillStyle = skyG;
+      ctx.fillRect(0, 0, W, roadY);
+      drawStuddedStreet(ctx, W, H, roadY);
+
+      // Portão com feixes laser rosa bloqueando a saída
+      VB.celBox(ctx, 90, 390, 64, 580, 12, "#475569", 6, 0.25);
+      VB.celBox(ctx, W - 154, 390, 64, 580, 12, "#475569", 6, 0.25);
+      for (let l = 0; l < 4; l++) {
+        ctx.fillStyle = "rgba(244, 114, 182, 0.45)";
+        ctx.fillRect(154, 450 + l * 110, W - 308, 22);
+      }
+
+      VB.drawVovo(ctx, {
+        x: 345,
+        y: roadY - 190,
+        scale: 1.15 * S,
+        expr: "happy",
+        pose: "cheer",
+        moneyNote: true,
+        nametag: "Vó_Generosa",
+        t,
+      });
+
+      VB.drawBoy(ctx, {
+        x: 735,
+        y: roadY - 185,
+        scale: 1.12 * S,
+        expr: "star_eyes",
+        pose: "cheer",
+        nametag: "+R$ 50 Escondido!",
+        t,
+      });
+
+      VB.celBox(ctx, W * 0.06, 186, W * 0.88, 126, 26, "#16182D", 6, 0);
+      strokedText(ctx, "🔒 MISSÃO OBRIGATÓRIA DE SAÍDA", W / 2, 226, 35, "#FFD426", 8);
+      strokedText(ctx, "[✓] 1 Abraço   [✓] Guardar R$ 50 no bolso", W / 2, 274, 34, "#5CE65C", 8);
+    } else if (envName === "vo_cta") {
+      drawSunburst(ctx, W, H, t, "#7C3AED", "#3B0764");
+      drawSpeedLines(ctx, W, H, t);
+      VB.drawVovo(ctx, { x: W * 0.31, y: H * 0.56, scale: 1.22 * S, expr: "happy", crown: true, holdingPot: true, t });
+      VB.drawBoy(ctx, { x: W * 0.71, y: H * 0.57, scale: 1.2 * S, expr: "star_eyes", pose: "cheer", t });
+      strokedText(ctx, "COMENTA:", W / 2, H * 0.11, Math.round(76 * S), "#FFFFFF", 15);
+      strokedText(ctx, cena.cta_palavra || "\"VÓ\" 👵", W / 2, H * 0.19, Math.round(122 * S), "#FF66B2", 18);
     }
 
     if (isL && cena.hud_dias) {
@@ -697,51 +1196,115 @@ window.VB = window.VB || {};
     }
   };
 
-  VB.renderSubtitles = function (ctx, W, H, sceneText, highlights, progress) {
+  VB.renderSubtitles = function (ctx, W, H, sceneText, highlights, progress, t = 0, wordsTiming = null) {
+    if (!sceneText) return;
     const isL = W > H;
-    const words = sceneText.trim().split(/\s+/);
+
+    // Escudo escuro suave na parte inferior (Y > 68%) para garantir leitura 100% nítida da legenda
+    const shieldG = ctx.createLinearGradient(0, H * 0.66, 0, H);
+    shieldG.addColorStop(0, "rgba(10, 8, 20, 0)");
+    shieldG.addColorStop(0.55, "rgba(10, 8, 20, 0.56)");
+    shieldG.addColorStop(1, "rgba(10, 8, 20, 0.78)");
+    ctx.fillStyle = shieldG;
+    ctx.fillRect(0, H * 0.66, W, H * 0.34);
+
     const chunkSize = isL ? 4 : 3;
-    const chunks = [];
-    for (let i = 0; i < words.length; i += chunkSize) {
-      chunks.push(words.slice(i, i + chunkSize));
+    let activeChunkWords = [];
+    let activeWordInChunk = -1;
+    let chunkAgeSec = 0.2;
+
+    if (Array.isArray(wordsTiming) && wordsTiming.length > 0) {
+      // Usa os pacotes originais do texto (com pontuação preservada!) alinhados aos timestamps exatos do Edge-TTS
+      const rawTokens = sceneText.trim().split(/\s+/);
+      const aligned = rawTokens.map((tok, idx) => {
+        const wt = wordsTiming[Math.min(idx, wordsTiming.length - 1)];
+        return {
+          display: tok,
+          startSec: wt ? wt.startSec : 0,
+          endSec: wt ? wt.endSec : 0,
+        };
+      });
+
+      const chunks = [];
+      for (let i = 0; i < aligned.length; i += chunkSize) {
+        chunks.push(aligned.slice(i, i + chunkSize));
+      }
+
+      let chosenIdx = 0;
+      for (let ci = 0; ci < chunks.length; ci++) {
+        if (t >= chunks[ci][0].startSec - 0.04) {
+          chosenIdx = ci;
+        }
+      }
+      const chosen = chunks[chosenIdx];
+      activeChunkWords = chosen.map((item) => item.display);
+      chunkAgeSec = Math.max(0, t - chosen[0].startSec);
+
+      for (let wi = 0; wi < chosen.length; wi++) {
+        if (t >= chosen[wi].startSec - 0.03) {
+          activeWordInChunk = wi;
+        }
+      }
+    } else {
+      const words = sceneText.trim().split(/\s+/);
+      const chunks = [];
+      for (let i = 0; i < words.length; i += chunkSize) {
+        chunks.push(words.slice(i, i + chunkSize));
+      }
+      const idx = Math.min(chunks.length - 1, Math.floor(progress * chunks.length));
+      activeChunkWords = chunks[idx];
+      const localP = (progress * chunks.length) % 1;
+      activeWordInChunk = Math.min(activeChunkWords.length - 1, Math.floor(localP * activeChunkWords.length));
+      chunkAgeSec = localP * 0.5;
     }
-    const idx = Math.min(chunks.length - 1, Math.floor(progress * chunks.length));
-    const chunk = chunks[idx];
-    const chunkLocalP = (progress * chunks.length) % 1;
-    const popScale = chunkLocalP < 0.18 ? 0.86 + (chunkLocalP / 0.18) * 0.2 : 1.0;
+
+    const popScale = chunkAgeSec < 0.12 ? 0.86 + (chunkAgeSec / 0.12) * 0.18 : 1.0;
 
     ctx.save();
-    const subY = H * (isL ? 0.84 : 0.77);
+    const subY = H * (isL ? 0.84 : 0.855);
     ctx.translate(W / 2, subY);
     ctx.scale(popScale, popScale);
 
-    const fontSize = isL ? 64 : 76;
+    const upperWords = activeChunkWords.map((w) => w.toUpperCase());
+    let fontSize = isL ? 64 : 72;
+    const spaceW = 22;
+    const maxAllowedW = W - 150;
+
     ctx.font = `900 ${fontSize}px 'Fredoka', 'Arial Black', sans-serif`;
+    let widths = upperWords.map((w) => ctx.measureText(w).width);
+    let totalW = widths.reduce((a, b) => a + b, 0) + spaceW * (upperWords.length - 1);
+
+    // Auto-ajuste para NUNCA cortar nenhuma palavra nas bordas da tela!
+    if (totalW > maxAllowedW) {
+      fontSize = Math.max(42, Math.floor(fontSize * (maxAllowedW / totalW)));
+      ctx.font = `900 ${fontSize}px 'Fredoka', 'Arial Black', sans-serif`;
+      widths = upperWords.map((w) => ctx.measureText(w).width);
+      totalW = widths.reduce((a, b) => a + b, 0) + spaceW * (upperWords.length - 1);
+    }
+
     ctx.lineJoin = "round";
     ctx.miterLimit = 2;
-
-    const upperWords = chunk.map((w) => w.toUpperCase());
-    const spaceW = 22;
-    const widths = upperWords.map((w) => ctx.measureText(w).width);
-    const totalW = widths.reduce((a, b) => a + b, 0) + spaceW * (upperWords.length - 1);
 
     let curX = -totalW / 2;
     upperWords.forEach((uw, wi) => {
       const clean = uw.replace(/[.,!?":]/g, "");
-      const color = (highlights && (highlights[uw] || highlights[clean])) || "#FFFFFF";
+      const isSpokenNow = wi === activeWordInChunk;
+      const highlightColor = highlights && (highlights[uw] || highlights[clean]);
+      const color = highlightColor || (isSpokenNow ? "#FFEE58" : "#FFFFFF");
       const cx = curX + widths[wi] / 2;
+      const wordLift = isSpokenNow ? -6 : 0;
 
-      ctx.fillStyle = "rgba(0,0,0,0.5)";
+      ctx.fillStyle = "rgba(0,0,0,0.58)";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText(uw, cx + 5, 8);
+      ctx.fillText(uw, cx + 5, 8 + wordLift);
 
       ctx.lineWidth = isL ? 15 : 18;
       ctx.strokeStyle = "#0E0B16";
-      ctx.strokeText(uw, cx, 0);
+      ctx.strokeText(uw, cx, wordLift);
 
       ctx.fillStyle = color;
-      ctx.fillText(uw, cx, 0);
+      ctx.fillText(uw, cx, wordLift);
 
       curX += widths[wi] + spaceW;
     });

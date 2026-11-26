@@ -24,7 +24,11 @@ import os
 import sys
 from pathlib import Path
 
-SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
+SCOPES = [
+    "https://www.googleapis.com/auth/youtube",
+    "https://www.googleapis.com/auth/youtube.upload",
+    "https://www.googleapis.com/auth/youtube.force-ssl",
+]
 
 
 def get_authenticated_service(client_secret_path: Path, token_path: Path):
@@ -65,6 +69,7 @@ def main() -> None:
         help="Privacidade inicial (padrão: private para revisão segura)",
     )
     parser.add_argument("--category", default="20", help="ID da categoria YouTube (20 = Gaming, 24 = Entertainment)")
+    parser.add_argument("--thumbnail", default=None, help="Caminho opcional da thumbnail (.png/.jpg)")
     args = parser.parse_args()
 
     from googleapiclient.http import MediaFileUpload
@@ -103,6 +108,21 @@ def main() -> None:
 
     video_id = response["id"]
     print(f"Upload concluído! Link: https://youtu.be/{video_id}")
+
+    if args.thumbnail:
+        thumb_path = Path(args.thumbnail)
+        if thumb_path.exists():
+            print(f"Enviando thumbnail '{thumb_path.name}'...")
+            try:
+                youtube.thumbnails().set(
+                    videoId=video_id,
+                    media_body=MediaFileUpload(str(thumb_path)),
+                ).execute()
+                print("Thumbnail aplicada com sucesso!")
+            except Exception as exc:
+                print(f"AVISO: Não foi possível definir thumbnail via API (verifique telefone no YouTube Studio): {exc}")
+        else:
+            print(f"AVISO: Thumbnail '{thumb_path}' não encontrada.")
 
 
 if __name__ == "__main__":
