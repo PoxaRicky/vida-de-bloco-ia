@@ -89,21 +89,24 @@ window.VB = window.VB || {};
     ctx.restore();
   }
 
-  function drawPixelHeart(ctx, cx, cy, u = 8) {
-    const rows = [
-      [-2, -1, 1, 2],
-      [-3, -2, -1, 0, 1, 2, 3],
-      [-3, -2, -1, 0, 1, 2, 3],
-      [-2, -1, 0, 1, 2],
-      [-1, 0, 1],
-      [0],
-    ];
-    ctx.fillStyle = "#FF5D8F";
-    rows.forEach((cols, r) => {
-      cols.forEach((c) => {
-        ctx.fillRect(cx + c * u - u / 2, cy + (r - 2.5) * u, u + 0.8, u + 0.8);
-      });
-    });
+  function drawLightningBolt(ctx, cx, cy, s = 1) {
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.scale(s, s);
+    ctx.beginPath();
+    ctx.moveTo(6, -26);
+    ctx.lineTo(-16, 4);
+    ctx.lineTo(-2, 4);
+    ctx.lineTo(-8, 28);
+    ctx.lineTo(18, -4);
+    ctx.lineTo(2, -4);
+    ctx.closePath();
+    ctx.fillStyle = "#FFD426";
+    ctx.fill();
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = OUTLINE;
+    ctx.stroke();
+    ctx.restore();
   }
 
   function drawFace(ctx, expr, isMom, t) {
@@ -209,32 +212,20 @@ window.VB = window.VB || {};
       ctx.stroke();
     }
 
-    // Óculos redondos da Mãe com reflexo verde da tela
+    // Óculos quadrados modernos da Mãe com leve reflexo
     if (isMom) {
       [-52, 52].forEach((gx) => {
         ctx.save();
-        ctx.beginPath();
-        ctx.arc(gx, -8, 44, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(162, 240, 232, 0.48)";
-        ctx.fill();
+        VB.celBox(ctx, gx - 42, -38, 84, 58, 14, "rgba(186, 230, 253, 0.45)", 5.5, 0);
         ctx.clip();
-        // Brilho verde de tela do jogo
-        ctx.fillStyle = "rgba(92, 230, 120, 0.38)";
-        ctx.beginPath();
-        ctx.ellipse(gx, -4, 28, 14, -0.15, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.fillStyle = "rgba(92, 230, 120, 0.28)";
+        ctx.fillRect(gx - 30, -24, 60, 22);
         ctx.restore();
-
-        ctx.beginPath();
-        ctx.arc(gx, -8, 44, 0, Math.PI * 2);
-        ctx.lineWidth = 5.5;
-        ctx.strokeStyle = "#2E2942";
-        ctx.stroke();
       });
       // Ponte dos óculos
       ctx.beginPath();
-      ctx.moveTo(-8, -8);
-      ctx.lineTo(8, -8);
+      ctx.moveTo(-10, -12);
+      ctx.lineTo(10, -12);
       ctx.lineWidth = 5.5;
       ctx.strokeStyle = "#2E2942";
       ctx.stroke();
@@ -377,7 +368,7 @@ window.VB = window.VB || {};
       VB.celBox(ctx, 6, 228, 68, 36, 16, "#231F2C", 6, 0.2);
     }
 
-    // Braços (atrás ou levantados)
+    // Braços (moletom ciano/roxo original PoxaRique!)
     const wave = Math.sin(t * 10) * 0.12;
     if (pose === "cheer") {
       [-1, 1].forEach((dir) => {
@@ -385,7 +376,7 @@ window.VB = window.VB || {};
         ctx.translate(dir * 82, 32);
         ctx.rotate(dir * -2.4 + wave * dir);
         VB.celBox(ctx, -24, 0, 48, 110, 22, "#FAD4B0", 6, 0.22);
-        VB.celBox(ctx, -26, -10, 52, 52, 22, "#FFD426", 6, 0.22);
+        VB.celBox(ctx, -26, -10, 52, 52, 22, "#06B6D4", 6, 0.22);
         ctx.restore();
       });
     } else {
@@ -394,70 +385,49 @@ window.VB = window.VB || {};
         ctx.translate(dir * 86, 26);
         ctx.rotate(dir * 0.22 + wave * dir);
         VB.celBox(ctx, -24, 28, 48, 96, 22, "#FAD4B0", 6, 0.22);
-        VB.celBox(ctx, -28, -4, 56, 58, 24, "#FFD426", 6, 0.22);
+        VB.celBox(ctx, -28, -4, 56, 58, 24, "#06B6D4", 6, 0.22);
         ctx.restore();
       });
     }
 
-    // Tronco amarelo + coração pixelado
-    VB.celBox(ctx, -76, 8, 152, 164, 30, "#FFD426", 6, 0.24);
-    drawPixelHeart(ctx, 0, 74, 9);
+    // Tronco moletom ciano + raio dourado original
+    VB.celBox(ctx, -76, 8, 152, 164, 30, "#06B6D4", 6, 0.24);
+    drawLightningBolt(ctx, 0, 82, 1.15);
 
     // Cabeça
     ctx.save();
     ctx.translate(0, -105);
 
-    // Aba do boné virado pra trás (saindo no topo direito)
-    ctx.save();
-    ctx.translate(78, -96);
-    ctx.rotate(-0.42);
-    VB.celBox(ctx, -20, -24, 92, 46, 22, "#2787E8", 6, 0.3);
-    ctx.restore();
-
-    // Tufos de cabelo laranja nas têmporas
-    [-1, 1].forEach((dir) => {
-      ctx.beginPath();
-      ctx.moveTo(dir * 96, -48);
-      ctx.lineTo(dir * 122, -40);
-      ctx.lineTo(dir * 104, -22);
-      ctx.lineTo(dir * 118, -8);
-      ctx.lineTo(dir * 96, -4);
-      ctx.closePath();
-      ctx.fillStyle = "#E67E22";
-      ctx.fill();
-      ctx.lineWidth = 5.5;
-      ctx.strokeStyle = OUTLINE;
-      ctx.stroke();
+    // Fone gamer roxo nas laterais da cabeça
+    [-108, 108].forEach((hx) => {
+      VB.celBox(ctx, hx - 16, -34, 32, 68, 14, "#7C3AED", 5.5, 0.2);
     });
 
     // Rosto quadrado arredondado
     VB.celBox(ctx, -102, -88, 204, 186, 44, "#FAD4B0", 6, 0.24);
 
-    // Domo do boné azul
+    // Cabelo espetado escuro + mecha ciano original (sem boné copiado!)
     ctx.save();
     ctx.beginPath();
-    ctx.moveTo(-108, -44);
-    ctx.bezierCurveTo(-108, -138, 108, -138, 108, -44);
+    ctx.moveTo(-108, -32);
+    ctx.lineTo(-112, -92);
+    ctx.lineTo(-68, -124);
+    ctx.lineTo(-24, -102);
+    ctx.lineTo(14, -134);
+    ctx.lineTo(58, -102);
+    ctx.lineTo(106, -116);
+    ctx.lineTo(108, -32);
+    ctx.quadraticCurveTo(40, -60, 0, -48);
+    ctx.quadraticCurveTo(-50, -62, -108, -32);
     ctx.closePath();
-    ctx.fillStyle = "#2787E8";
+    ctx.fillStyle = "#1E1B4B";
     ctx.fill();
-    ctx.save();
-    ctx.clip();
-    ctx.fillStyle = "rgba(15, 20, 45, 0.18)";
-    ctx.fillRect(42, -140, 80, 110);
-    ctx.restore();
     ctx.lineWidth = 6;
     ctx.strokeStyle = OUTLINE;
     ctx.stroke();
 
-    // Abertura laranja da regulagem do boné na testa
-    VB.celBox(ctx, -36, -74, 72, 30, 14, "#E67E22", 5.5, 0.2);
-    ctx.beginPath();
-    ctx.moveTo(-36, -56);
-    ctx.lineTo(36, -56);
-    ctx.lineWidth = 5;
-    ctx.strokeStyle = OUTLINE;
-    ctx.stroke();
+    // Mecha ciano estilizada na franja
+    VB.celBox(ctx, -28, -94, 58, 26, 12, "#22D3EE", 4.5, 0.2);
     ctx.restore();
 
     // Expressão facial
@@ -506,14 +476,14 @@ window.VB = window.VB || {};
     VB.celBox(ctx, -70, 232, 66, 36, 16, "#231F2C", 6, 0.2);
     VB.celBox(ctx, 4, 232, 66, 36, 16, "#231F2C", 6, 0.2);
 
-    // Braços com manga verde-água
+    // Braços com manga coral/vermelha original
     const wave = Math.sin(t * 12) * 0.14;
     if (pose === "cheer" || pose === "fall") {
       [-1, 1].forEach((dir) => {
         ctx.save();
         ctx.translate(dir * 84, 30);
         ctx.rotate(dir * -2.35 + wave * dir);
-        VB.celBox(ctx, -24, 0, 48, 104, 22, "#2EC4B6", 6, 0.22);
+        VB.celBox(ctx, -24, 0, 48, 104, 22, "#F97316", 6, 0.22);
         VB.celBox(ctx, -22, 86, 44, 38, 18, "#FAD4B0", 5.5, 0.2);
         ctx.restore();
       });
@@ -522,17 +492,17 @@ window.VB = window.VB || {};
         ctx.save();
         ctx.translate(dir * 90, 24);
         ctx.rotate(dir * 0.14 + wave * dir);
-        VB.celBox(ctx, -25, 0, 50, 112, 22, "#2EC4B6", 6, 0.22);
+        VB.celBox(ctx, -25, 0, 50, 112, 22, "#F97316", 6, 0.22);
         VB.celBox(ctx, -23, 94, 46, 40, 18, "#FAD4B0", 5.5, 0.2);
         ctx.restore();
       });
     }
 
-    // Tronco: blusa rosa interna + casaco verde-água aberto com botões
-    VB.celBox(ctx, -76, 8, 152, 162, 26, "#F28BB2", 6, 0.2);
-    // Abas esquerda e direita do cardigã
-    VB.celBox(ctx, -76, 8, 52, 162, 20, "#2EC4B6", 6, 0.18);
-    VB.celBox(ctx, 24, 8, 52, 162, 20, "#2EC4B6", 6, 0.28);
+    // Tronco: blusa branca interna + jaqueta coral/laranja aberta com botões
+    VB.celBox(ctx, -76, 8, 152, 162, 26, "#F8FAFC", 6, 0.2);
+    // Abas esquerda e direita da jaqueta
+    VB.celBox(ctx, -76, 8, 52, 162, 20, "#F97316", 6, 0.18);
+    VB.celBox(ctx, 24, 8, 52, 162, 20, "#F97316", 6, 0.28);
     // Botões brancos no cardigã
     [-42, -42].forEach((_, idx) => {
       const by = idx === 0 ? 52 : 96;

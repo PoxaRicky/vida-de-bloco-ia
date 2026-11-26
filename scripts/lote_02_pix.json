@@ -1,0 +1,46 @@
+{
+  "titulo": "E Se Cada Passo Seu Desse 1 REAL no Pix? 💸",
+  "formato": "short",
+  "marca_dagua": "PoxaRique!",
+  "arquivo_saida": "lote_02_pix_poxarique.mp4",
+  "cenas": [
+    {
+      "id": "hook",
+      "voz": "menino",
+      "texto": "E se cada passo que você desse caísse um real no Pix na hora?",
+      "ambiente": "hook_caramelo",
+      "destaque": { "PASSO": "#5CE65C", "PIX": "#FFD426" }
+    },
+    {
+      "id": "quarto",
+      "voz": "mae",
+      "texto": "Menino, por que você tá correndo em volta da sala às três da manhã?!",
+      "ambiente": "bedroom_duo",
+      "destaque": { "CORRENDO": "#FFD426", "MANHÃ?!": "#FF66B2" }
+    },
+    {
+      "id": "padaria",
+      "voz": "menino",
+      "texto": "Dia três: eu já comprei a padaria do bairro inteira só andando!",
+      "ambiente": "caramelo_padaria",
+      "destaque": { "PADARIA": "#FFD426", "ANDANDO!": "#5CE65C" }
+    },
+    {
+      "id": "rua",
+      "voz": "menino",
+      "texto": "Dia sete: o servidor travou porque o Brasil inteiro começou a correr junto!",
+      "ambiente": "brazil_roblox_street",
+      "sistema_1": "Alerta: Pix por passo ativado!",
+      "sistema_2": "213 milhões correndo na rua.",
+      "destaque": { "BRASIL": "#5CE65C", "CORRER": "#FFD426" }
+    },
+    {
+      "id": "cta",
+      "voz": "menino",
+      "texto": "Comenta PIX quantos quilômetros você correria hoje!",
+      "ambiente": "caramelo_cta",
+      "cta_palavra": "\"PIX\" 💸",
+      "destaque": { "PIX": "#FFD426", "HOJE!": "#5CE65C" }
+    }
+  ]
+}
