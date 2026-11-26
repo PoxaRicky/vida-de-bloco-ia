@@ -6,11 +6,15 @@ __pycache__/
 
 # Arquivos gerados / mídia pesada
 output/
+assets/sfx/
 *.mp4
 *.mp3
+*.m4a
 *.wav
 frames/
 
-# Segredos e chaves de API
+# Segredos, tokens OAuth e chaves de API
 .env
 .env.local
+client_secret.json
+token.json

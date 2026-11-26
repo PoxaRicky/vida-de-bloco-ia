@@ -660,4 +660,191 @@ window.VB = window.VB || {};
     ctx.fillText(text, x, y - 1);
     ctx.restore();
   };
+
+  // Personagem Cachorro Caramelo Brasileiro em bloco (reutilizável)
+  VB.drawCaramelo = function (ctx, opts = {}) {
+    const {
+      x = 540,
+      y = 1050,
+      scale = 1,
+      crown = false,
+      sunglasses = false,
+      pose = "stand",
+      t = 0,
+      nametag = "",
+    } = opts;
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(scale, scale);
+
+    if (pose !== "closeup") {
+      ctx.beginPath();
+      ctx.ellipse(0, 175, 115, 22, 0, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(0,0,0,0.22)";
+      ctx.fill();
+    }
+
+    // Rabinho abanando
+    ctx.save();
+    ctx.translate(98, 42);
+    ctx.rotate(Math.sin(t * 18) * 0.45 + 0.4);
+    VB.celBox(ctx, -12, -58, 28, 66, 14, "#D98629", 5.5, 0.25);
+    ctx.restore();
+
+    // Patinhas traseiras e dianteiras
+    const bounce = pose === "cheer" ? Math.abs(Math.sin(t * 12)) * -14 : 0;
+    [-72, -22, 26, 74].forEach((lx) => {
+      VB.celBox(ctx, lx - 20, 96 + bounce, 40, 76, 14, "#E59A3C", 5.5, 0.25);
+      VB.celBox(ctx, lx - 22, 152 + bounce, 44, 24, 10, "#8C4A1C", 5, 0.2);
+    });
+
+    // Corpo em bloco caramelo + barriga creme
+    VB.celBox(ctx, -98, 6, 196, 108, 28, "#E59A3C", 6, 0.24);
+    VB.celBox(ctx, -56, 36, 112, 68, 20, "#FDE0B6", 4, 0);
+
+    // Coleira vermelha com plaquinha dourada
+    VB.celBox(ctx, -82, -8, 164, 24, 10, "#EE2B3B", 5.5, 0.2);
+    ctx.beginPath();
+    ctx.arc(0, 18, 14, 0, Math.PI * 2);
+    ctx.fillStyle = "#FFD426";
+    ctx.fill();
+    ctx.lineWidth = 4.5;
+    ctx.strokeStyle = OUTLINE;
+    ctx.stroke();
+
+    // Cabeça quadrada arredondada do Caramelo
+    ctx.save();
+    ctx.translate(0, -96);
+
+    // Orelhas caídas marrons
+    [-1, 1].forEach((dir) => {
+      ctx.save();
+      ctx.translate(dir * 94, -34);
+      ctx.rotate(dir * (0.22 + Math.sin(t * 10) * 0.08));
+      VB.celBox(ctx, -22, 0, 44, 88, 20, "#8C4A1C", 6, 0.25);
+      ctx.restore();
+    });
+
+    VB.celBox(ctx, -94, -82, 188, 166, 40, "#E59A3C", 6, 0.24);
+
+    // Olhos expressivos ou óculos escuros de patrão
+    if (sunglasses) {
+      VB.celBox(ctx, -82, -32, 72, 42, 10, "#111827", 5.5, 0);
+      VB.celBox(ctx, 10, -32, 72, 42, 10, "#111827", 5.5, 0);
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = OUTLINE;
+      ctx.beginPath();
+      ctx.moveTo(-10, -14);
+      ctx.lineTo(10, -14);
+      ctx.stroke();
+      // Brilho branco na lente
+      ctx.strokeStyle = "rgba(255,255,255,0.65)";
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(-66, -22);
+      ctx.lineTo(-48, -4);
+      ctx.moveTo(26, -22);
+      ctx.lineTo(44, -4);
+      ctx.stroke();
+    } else {
+      [-42, 42].forEach((ox) => {
+        ctx.beginPath();
+        ctx.arc(ox, -14, 22, 0, Math.PI * 2);
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fill();
+        ctx.lineWidth = 5;
+        ctx.strokeStyle = OUTLINE;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(ox, -14, 10, 0, Math.PI * 2);
+        ctx.fillStyle = OUTLINE;
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(ox - 4, -18, 4, 0, Math.PI * 2);
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fill();
+      });
+    }
+
+    // Focinho bege + nariz preto brilhante + linguinha rosa
+    VB.celBox(ctx, -48, 12, 96, 58, 24, "#FDE0B6", 5.5, 0.18);
+    VB.celBox(ctx, -20, 16, 40, 24, 12, "#1E1B2E", 4.5, 0);
+
+    const pant = 22 + Math.abs(Math.sin(t * 14)) * 12;
+    VB.celBox(ctx, -16, 46, 32, pant, 14, "#FF6B97", 4.5, 0);
+
+    // Coroa Admin dourada
+    if (crown) {
+      ctx.save();
+      ctx.translate(0, -104);
+      ctx.beginPath();
+      ctx.moveTo(-58, 18);
+      ctx.lineTo(-68, -32);
+      ctx.lineTo(-28, -6);
+      ctx.lineTo(0, -44);
+      ctx.lineTo(28, -6);
+      ctx.lineTo(68, -32);
+      ctx.lineTo(58, 18);
+      ctx.closePath();
+      ctx.fillStyle = "#FFD426";
+      ctx.fill();
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = OUTLINE;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    ctx.restore();
+
+    if (nametag) {
+      VB.drawNametag(ctx, 0, crown ? -246 : -210, nametag, "#FFD426");
+    }
+
+    ctx.restore();
+  };
+
+  // Marca d'água oficial do criador (PoxaRique!)
+  VB.drawWatermark = function (ctx, W, H, label = "PoxaRique!", isLandscape = false) {
+    if (!label) return;
+    ctx.save();
+    const x = isLandscape ? 42 : 38;
+    const y = isLandscape ? H - 72 : 118;
+    const scale = isLandscape ? 0.88 : 1.0;
+
+    ctx.translate(x, y);
+    ctx.scale(scale, scale);
+
+    ctx.font = "900 30px 'Fredoka', 'Arial Black', sans-serif";
+    const textW = ctx.measureText(label).width;
+    const boxW = textW + 74;
+    const boxH = 52;
+
+    // Pílula escura translúcida com borda dourada sutil
+    ctx.globalAlpha = 0.86;
+    ctx.beginPath();
+    ctx.roundRect(0, -boxH / 2, boxW, boxH, 26);
+    ctx.fillStyle = "rgba(18, 16, 34, 0.78)";
+    ctx.fill();
+    ctx.lineWidth = 3.5;
+    ctx.strokeStyle = "#FFD426";
+    ctx.stroke();
+
+    // Cubinho ícone amarelo à esquerda
+    VB.celBox(ctx, 14, -13, 26, 26, 6, "#FFD426", 3.5, 0.25);
+
+    // Texto PoxaRique!
+    ctx.globalAlpha = 0.96;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = "#0E0B16";
+    ctx.strokeText(label, 50, 1);
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillText(label, 50, 1);
+
+    ctx.restore();
+  };
 })(window.VB);

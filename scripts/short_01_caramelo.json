@@ -1,0 +1,55 @@
+{
+  "titulo": "E Se o Cachorro CARAMELO Virasse Dono do Roblox? 😱",
+  "formato": "short",
+  "marca_dagua": "PoxaRique!",
+  "arquivo_saida": "short_01_caramelo_poxarique.mp4",
+  "cenas": [
+    {
+      "id": "hook",
+      "voz": "menino",
+      "texto": "E se o cachorro Caramelo virasse o novo dono do Roblox?",
+      "ambiente": "hook_caramelo",
+      "destaque": { "CARAMELO": "#FFD426", "ROBLOX?": "#5CE65C" }
+    },
+    {
+      "id": "dia_1_choque",
+      "voz": "menino",
+      "texto": "Dia um: todo motoboy que entrasse no jogo levava ban na hora!",
+      "ambiente": "boy_extreme_shock",
+      "destaque": { "MOTOBOY": "#FFD426", "BAN": "#FF5733" }
+    },
+    {
+      "id": "dia_2_padaria",
+      "voz": "mae",
+      "texto": "Como assim meu Robux virou coxinha e pão de queijo na padaria?!",
+      "ambiente": "caramelo_padaria",
+      "destaque": { "ROBUX": "#5CE65C", "COXINHA": "#FFD426" }
+    },
+    {
+      "id": "dia_3_parkour",
+      "voz": "menino",
+      "texto": "Dia três: ele zerou o parkour impossível correndo atrás de um pneu!",
+      "ambiente": "caramelo_obby_pro",
+      "dia_topo": "DIA",
+      "dia_num": "TRÊS",
+      "destaque": { "PARKOUR": "#5CE65C", "PNEU!": "#FFD426" }
+    },
+    {
+      "id": "dia_7_admin",
+      "voz": "menino",
+      "texto": "Dia sete: ele comprou o servidor do Brasil e botou minha mãe de VIP!",
+      "ambiente": "caramelo_admin_street",
+      "sistema_1": "Caramelo_Dono assumiu o servidor!",
+      "sistema_2": "Proibido passar de moto nesta rua.",
+      "destaque": { "BRASIL": "#5CE65C", "VIP!": "#FF66B2" }
+    },
+    {
+      "id": "cta",
+      "voz": "menino",
+      "texto": "Comenta CARAMELO se você jogaria nesse servidor todo dia!",
+      "ambiente": "caramelo_cta",
+      "cta_palavra": "\"CARAMELO\" 👇",
+      "destaque": { "CARAMELO": "#FFD426", "SERVIDOR": "#5CE65C" }
+    }
+  ]
+}

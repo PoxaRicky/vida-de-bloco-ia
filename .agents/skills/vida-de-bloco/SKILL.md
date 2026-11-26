@@ -1,30 +1,32 @@
 ---
 name: vida-de-bloco
 description: >-
-  Cria roteiros, cenas 2D/2.5D estilo Vida de Bloco (contorno grosso + cel-shading + blocos/studs),
-  narração multi-voz TTS e vídeos completos (Shorts e Longos) no formato "E se...?".
-  Use quando o usuário pedir para criar um vídeo, Short, roteiro ou animação para o canal.
+  Cria roteiros, cenas 2D/2.5D estilo Vida de Bloco com marca d'água "PoxaRique!",
+  narração multi-voz TTS, efeitos sonoros + trilha (SFX/BGM), vídeos Shorts (9:16) e
+  Longos (16:9) no formato "E se...?", além de upload via YouTube API.
 ---
 
-# Skill: Vida de Bloco (Formato "E se...?")
+# Skill: Vida de Bloco — PoxaRique! (Formato "E se...?")
 
-## 1. Identidade Visual Obrigatória (Fiel ao @VidadeBloco)
-- **Traço e Pintura:** Contorno escuro uniforme (`#1A1423`, 5–7px) + **cel-shading de 2 tons** (faixa vertical de sombra na direita de 24%) — implementado em `assets/characters/cartoon_rig.js`.
+## 1. Assinatura & Identidade Visual
+- **Marca d'água obrigatória:** Sempre incluir `"marca_dagua": "PoxaRique!"` no JSON do roteiro (`VB.drawWatermark` renderiza a pílula oficial `PoxaRique!` em todos os frames).
+- **Traço e Pintura:** Contorno escuro uniforme (`#1A1423`, 5–7px) + **cel-shading de 2 tons** (sombra lateral de 24%) em `assets/characters/cartoon_rig.js`.
 - **Personagens Reutilizáveis:**
-  - `VB.drawBoy`: boné azul virado para trás com abertura laranja, tufos de cabelo laranja, camiseta amarela com coração pixelado rosa, expressões (`shocked_extreme`, `side_eye`, `star_eyes`, `happy`) e tablet.
-  - `VB.drawMom`: cabelo castanho com franja + rabo de cavalo lateral com elástico amarelo, brincos dourados, óculos redondos verde-água com reflexo de tela, cardigã verde-água sobre blusa rosa, calça roxa e coroa Admin opcional.
-- **CenáriosCompletos (`assets/scenes/environments.js`):**
-  - Nunca usar fundo vazio! Usar cenários ricos: `hook_sunburst` (com título gigante colorido no topo), `bedroom_duo` (papel de parede listrado roxo, janela, prateleira com troféu, pufe rosa), `obby_lava_fall` (plataforma, placa PULE!, bloco 3D verde, lava com partículas, rastro fantasma e contador `QUEDAS`), `dia_quatro_obby` (chão xadrez verde em perspectiva + explosão vermelha `DIA QUATRO`), `brazil_roblox_street` (rua com *studs*, Padaria, caixas d'água azuis, postes, sol quadrado, nametags e modal `⚙ SISTEMA`).
-- **Legendas Karaokê:** Fonte `Fredoka` pesada com contorno preto grosso, 2–3 palavras por vez com efeito *pop* e palavras-chave coloridas (`#FF66B2` rosa, `#5CE65C` verde, `#FFD426` amarelo).
+  - `VB.drawBoy` ("Você"): boné azul para trás, camiseta amarela com coração pixelado, pufe/tablet.
+  - `VB.drawMom` ("Mãe"): óculos redondos com reflexo verde, brincos dourados, cardigã verde-água, coroa Admin opcional.
+  - `VB.drawCaramelo` ("Caramelo"): vira-lata caramelo brasileiro em bloco com coleira, linguinha animada, óculos escuros e coroa Admin opcional.
+- **Formatos Suportados no Mesmo Motor:**
+  - `"formato": "short"` → Vertical **1080x1920 (9:16)** com cortes <1s (foco em inscritos).
+  - `"formato": "long"` → Horizontal **1920x1080 (16:9)** com HUD `"hud_dias"` no canto superior direito (foco nas 4.000 horas de monetização).
 
-## 2. Estrutura do Roteiro ("E se...?")
-1. **Gancho (0–3s):** Pergunta *"E se...?"* lida em voz alta + close-up no frame 1 + título empilhado.
-2. **Escalada Progressiva:** Avanço por dias (`Dia 1`, `Dia 4`, `Dia 7`...) aumentando o absurdo.
-3. **Virada (Plot Twist):** Reviravolta cômica no clímax.
-4. **CTA de 1 Palavra:** Fechar pedindo comentário de uma única palavra.
+## 2. Áudio Master (Multi-Voz + SFX + Trilha)
+- `scripts/generate_tts.py`: Gera vozes alternadas (`menino` / `mae` / `narrador`) via ElevenLabs (se `ELEVENLABS_API_KEY` estiver no `.env`) ou Edge-TTS gratuito.
+- `scripts/generate_sfx.py`: Sintetiza efeitos sonoros livres de direitos autorais (`pop.wav`, `whoosh.wav`, `shock.wav`, `lava.wav`, `win.wav` e trilha `bgm_loop.wav`), mixados automaticamente pelo `scripts/render_video.js`.
 
-## 3. Pipeline de Execução Local
-1. Salvar o roteiro JSON em `scripts/<nome>.json` definindo `voz` (`menino` ou `mae`), `ambiente` e `destaque`.
-2. Gerar vozes: `python scripts/generate_tts.py scripts/<nome>.json`
-3. Renderizar vídeo via pipe direto no FFmpeg: `node scripts/render_video.js scripts/<nome>.json`
-4. Inspecionar os previews em `output/preview_scene_*.jpg` para garantir qualidade visual antes de entregar o MP4 final.
+## 3. Pipeline Completo
+1. Criar roteiro JSON em `scripts/<slug>.json`.
+2. Gerar falas: `python scripts/generate_tts.py scripts/<slug>.json`
+3. Renderizar vídeo + mixagem master: `node scripts/render_video.js scripts/<slug>.json`
+4. Inspecionar `output/preview_<slug>_*.jpg` e assistir ao `.mp4` em `output/`.
+5. (Opcional) Subir para o YouTube após aprovação humana:
+   `python scripts/upload_youtube.py --video output/<arquivo>.mp4 --title "<Título>" --privacy private`

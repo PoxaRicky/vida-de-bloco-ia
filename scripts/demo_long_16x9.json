@@ -1,0 +1,26 @@
+{
+  "titulo": "E Se o BRASIL Virasse Roblox Por 7 Dias? 😱",
+  "formato": "long",
+  "marca_dagua": "PoxaRique!",
+  "arquivo_saida": "preview_long_16x9_poxarique.mp4",
+  "cenas": [
+    {
+      "id": "abertura_rua",
+      "voz": "menino",
+      "texto": "E se você acordasse amanhã e o Brasil inteiro tivesse virado um servidor de Roblox?",
+      "ambiente": "brazil_roblox_street",
+      "hud_dias": "7 DIAS",
+      "sistema_1": "Atualização do Brasil iniciada!",
+      "sistema_2": "213 milhões de jogadores conectados.",
+      "destaque": { "BRASIL": "#5CE65C", "ROBLOX?": "#FFD426" }
+    },
+    {
+      "id": "quarto_mae",
+      "voz": "mae",
+      "texto": "Menino, por que minhas mãos ficaram quadradas e o telhado virou lava?!",
+      "ambiente": "bedroom_duo",
+      "hud_dias": "DIA 1",
+      "destaque": { "QUADRADAS": "#FFD426", "LAVA?!": "#FF5733" }
+    }
+  ]
+}
