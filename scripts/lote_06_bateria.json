@@ -1,0 +1,44 @@
+{
+  "titulo": "E Se a BATERIA do Celular Fosse Sua Vida no Roblox? 🔋😱",
+  "formato": "short",
+  "marca_dagua": "PoxaRique!",
+  "arquivo_saida": "lote_06_bateria_poxarique.mp4",
+  "cenas": [
+    {
+      "id": "hook",
+      "voz": "menino",
+      "texto": "E se a porcentagem da bateria do seu celular fosse a sua vida no Roblox?",
+      "ambiente": "bateria_hook",
+      "destaque": { "BATERIA": "#5CE65C", "VIDA": "#FF5733", "ROBLOX?": "#FFD426" }
+    },
+    {
+      "id": "brilho_sol",
+      "voz": "menino",
+      "texto": "Abri um vídeo com brilho no máximo no sol e perdi quarenta de vida na hora!",
+      "ambiente": "bateria_rua_sol",
+      "destaque": { "BRILHO": "#FFD426", "QUARENTA": "#FF5733", "VIDA": "#FF5733" }
+    },
+    {
+      "id": "disputa_tomada",
+      "voz": "mae",
+      "texto": "Sai daí menino! Eu tô em dois por cento, essa tomada da sala é minha!",
+      "ambiente": "bateria_disputa_tomada",
+      "destaque": { "DOIS": "#FF5733", "TOMADA": "#FFD426", "MINHA!": "#FF66B2" }
+    },
+    {
+      "id": "powerbank_imortal",
+      "voz": "menino",
+      "texto": "Equipei um carregador portátil lendário na mochila e virei imortal no servidor!",
+      "ambiente": "bateria_powerbank_vip",
+      "destaque": { "PORTÁTIL": "#5CE65C", "IMORTAL": "#FFD426" }
+    },
+    {
+      "id": "cta",
+      "voz": "menino",
+      "texto": "Olha no topo da tela agora e comenta quantos por cento de vida você tem!",
+      "ambiente": "bateria_cta",
+      "cta_palavra": "SUA BATERIA % 🔋",
+      "destaque": { "TOPO": "#FFD426", "POR": "#5CE65C", "CENTO": "#5CE65C" }
+    }
+  ]
+}

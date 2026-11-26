@@ -1,0 +1,44 @@
+{
+  "titulo": "E Se o CHINELO da Mãe Fosse Item Mítico no Roblox? 🩴😱",
+  "formato": "short",
+  "marca_dagua": "PoxaRique!",
+  "arquivo_saida": "lote_04_chinelo_poxarique.mp4",
+  "cenas": [
+    {
+      "id": "hook",
+      "voz": "menino",
+      "texto": "E se o chinelo da sua mãe virasse um item mítico banido no Roblox?",
+      "ambiente": "chinelo_hook",
+      "destaque": { "CHINELO": "#FFD426", "MÍTICO": "#FF66B2", "ROBLOX?": "#5CE65C" }
+    },
+    {
+      "id": "mira_laser",
+      "voz": "mae",
+      "texto": "Esqueceu de tirar o frango do congelador?! Ativando mira automática!",
+      "ambiente": "chinelo_mira_laser",
+      "destaque": { "FRANGO": "#FFD426", "MIRA": "#FF5733", "AUTOMÁTICA!": "#FF5733" }
+    },
+    {
+      "id": "curva_corredor",
+      "voz": "menino",
+      "texto": "Não adianta esconder atrás da parede! Ele faz curva de noventa graus no corredor!",
+      "ambiente": "chinelo_curva_corredor",
+      "destaque": { "PAREDE!": "#FFD426", "CURVA": "#5CE65C", "NOVENTA": "#FF66B2" }
+    },
+    {
+      "id": "escudo_vo",
+      "voz": "vo",
+      "texto": "Para com isso agora! Na frente da Vó ninguém encosta no meu netinho!",
+      "ambiente": "chinelo_escudo_vo",
+      "destaque": { "VÓ": "#FF66B2", "NINGUÉM": "#FFD426", "NETINHO!": "#5CE65C" }
+    },
+    {
+      "id": "cta",
+      "voz": "menino",
+      "texto": "Comenta CHINELO se você também já desviou de um na vida real!",
+      "ambiente": "chinelo_cta",
+      "cta_palavra": "\"CHINELO\" 🩴",
+      "destaque": { "CHINELO": "#FFD426", "DESVIOU": "#5CE65C" }
+    }
+  ]
+}

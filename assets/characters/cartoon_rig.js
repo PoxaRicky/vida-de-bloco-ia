@@ -1332,4 +1332,122 @@ window.VB = window.VB || {};
 
     ctx.restore();
   };
+
+  /**
+   * Prop icônico: Chinelo Mítico Brasileiro (Havaiana branca/azul com aura lendária opcional)
+   */
+  VB.drawChinelo = function (ctx, x, y, scale = 1, rot = 0, glow = true) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rot);
+    ctx.scale(scale, scale);
+
+    if (glow) {
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 92, 54, 0, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(255, 212, 38, 0.34)";
+      ctx.fill();
+    }
+
+    // Sola branca com lateral azul clássica
+    VB.celBox(ctx, -68, -30, 136, 60, 28, "#38BDF8", 6, 0.2);
+    VB.celBox(ctx, -64, -26, 128, 50, 24, "#F8FAFC", 5, 0.12);
+
+    // Tiras azuis em Y
+    ctx.lineWidth = 10;
+    ctx.lineCap = "round";
+    ctx.strokeStyle = "#0284C7";
+    ctx.beginPath();
+    ctx.moveTo(28, 0);
+    ctx.lineTo(-18, -22);
+    ctx.moveTo(28, 0);
+    ctx.lineTo(-18, 22);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(28, 0, 8, 0, Math.PI * 2);
+    ctx.fillStyle = "#1E3A8A";
+    ctx.fill();
+    ctx.restore();
+  };
+
+  /**
+   * Personagem Caixa de Supermercado ("Caixa_Turbo_999"): boné/viseira vermelha, colete vermelho/amarelo,
+   * leitor laser de código de barras na mão, proporção oficial 204x186 / 156x164 e isMom=false!
+   */
+  VB.drawCaixa = function (ctx, opts = {}) {
+    const rawExpr = opts.expr || opts.expression || "side_eye";
+    const expr = rawExpr === "shock" ? "shocked_extreme" : rawExpr;
+    const {
+      x = 540,
+      y = 960,
+      scale = 1,
+      scanner = true,
+      t = 0,
+      nametag = "",
+    } = opts;
+
+    const bob = Math.sin(t * 7) * 4;
+    ctx.save();
+    ctx.translate(x, y + bob);
+    ctx.scale(scale, scale);
+
+    ctx.beginPath();
+    ctx.ellipse(0, 268, 95, 22, 0, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(0,0,0,0.22)";
+    ctx.fill();
+
+    VB.celBox(ctx, -60, 152, 54, 100, 16, "#1E293B", 6, 0.24);
+    VB.celBox(ctx, 6, 152, 54, 100, 16, "#1E293B", 6, 0.24);
+    VB.celBox(ctx, -68, 232, 64, 34, 14, "#0F172A", 6, 0.2);
+    VB.celBox(ctx, 4, 232, 64, 34, 14, "#0F172A", 6, 0.2);
+
+    const scanWave = Math.sin(t * 16) * 0.18;
+    [-1, 1].forEach((dir) => {
+      ctx.save();
+      ctx.translate(dir * 88, 26);
+      ctx.rotate(dir === -1 ? -0.45 + scanWave : 0.22);
+      VB.celBox(ctx, -24, 0, 48, 52, 20, "#DC2626", 6, 0.22);
+      VB.celBox(ctx, -22, 42, 44, 72, 18, "#FAD4B0", 6, 0.22);
+      ctx.restore();
+    });
+
+    // Uniforme supermercado (camisa amarela + colete vermelho + crachá)
+    VB.celBox(ctx, -78, 8, 156, 164, 28, "#FACC15", 6, 0.2);
+    VB.celBox(ctx, -78, 8, 52, 164, 20, "#DC2626", 6, 0.2);
+    VB.celBox(ctx, 26, 8, 52, 164, 20, "#DC2626", 6, 0.26);
+    VB.celBox(ctx, 32, 46, 38, 26, 6, "#FFFFFF", 4, 0);
+
+    // Leitor de código de barras disparando feixe vermelho!
+    if (scanner) {
+      ctx.save();
+      ctx.translate(-118, 72 + Math.sin(t * 16) * 10);
+      VB.celBox(ctx, -28, -18, 56, 32, 10, "#1E293B", 5, 0.2);
+      VB.celBox(ctx, -10, 8, 20, 36, 8, "#334155", 5, 0.2);
+      ctx.beginPath();
+      ctx.moveTo(-28, -2);
+      ctx.lineTo(-120, -28);
+      ctx.lineTo(-120, 24);
+      ctx.closePath();
+      ctx.fillStyle = "rgba(239, 68, 68, 0.48)";
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Cabeça 204x186 + Boné vermelho do mercado
+    ctx.save();
+    ctx.translate(0, -106);
+    VB.celBox(ctx, -102, -88, 204, 186, 44, "#FAD4B0", 6, 0.24);
+    VB.celBox(ctx, -106, -118, 212, 62, 28, "#DC2626", 6, 0.22);
+    VB.celBox(ctx, -124, -74, 150, 22, 10, "#991B1B", 5.5, 0);
+
+    drawFace(ctx, expr, false, t);
+    ctx.restore();
+
+    if (nametag) {
+      VB.drawNametag(ctx, 0, -278, nametag, "#FFD426");
+    }
+
+    ctx.restore();
+  };
 })(window.VB);

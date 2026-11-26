@@ -1,0 +1,44 @@
+{
+  "titulo": "E Se Sua Mãe Sumisse na Fila do Mercado no Roblox? 🛒😱",
+  "formato": "short",
+  "marca_dagua": "PoxaRique!",
+  "arquivo_saida": "lote_05_mercado_poxarique.mp4",
+  "cenas": [
+    {
+      "id": "hook",
+      "voz": "menino",
+      "texto": "E se sua mãe te deixasse na fila do mercado e virasse missão mortal no Roblox?",
+      "ambiente": "mercado_hook",
+      "destaque": { "FILA": "#FFD426", "MERCADO": "#5CE65C", "MORTAL": "#FF5733" }
+    },
+    {
+      "id": "mae_sumiu",
+      "voz": "mae",
+      "texto": "Fica aí na fila que a mamãe só vai buscar um temperinho rápido!",
+      "ambiente": "mercado_mae_corredor",
+      "destaque": { "FILA": "#FFD426", "TEMPERINHO": "#5CE65C", "RÁPIDO!": "#FF66B2" }
+    },
+    {
+      "id": "caixa_laser",
+      "voz": "menino",
+      "texto": "O caixa ativou velocidade máxima! Só faltam dois itens e eu tô sem dinheiro!",
+      "ambiente": "mercado_caixa_laser",
+      "destaque": { "VELOCIDADE": "#FF5733", "DOIS": "#FFD426", "DINHEIRO!": "#FF5733" }
+    },
+    {
+      "id": "resgate_epico",
+      "voz": "mae",
+      "texto": "Cheguei no último segundo! Passa no cartão moço, meu filho tá salvo!",
+      "ambiente": "mercado_resgate_epico",
+      "destaque": { "ÚLTIMO": "#FFD426", "CARTÃO": "#5CE65C", "SALVO!": "#5CE65C" }
+    },
+    {
+      "id": "cta",
+      "voz": "menino",
+      "texto": "Comenta MERCADO se você já passou esse desespero na fila!",
+      "ambiente": "mercado_cta",
+      "cta_palavra": "\"MERCADO\" 🛒",
+      "destaque": { "MERCADO": "#FFD426", "DESESPERO": "#FF5733" }
+    }
+  ]
+}

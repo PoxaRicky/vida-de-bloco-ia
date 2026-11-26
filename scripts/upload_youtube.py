@@ -70,6 +70,11 @@ def main() -> None:
     )
     parser.add_argument("--category", default="20", help="ID da categoria YouTube (20 = Gaming, 24 = Entertainment)")
     parser.add_argument("--thumbnail", default=None, help="Caminho opcional da thumbnail (.png/.jpg)")
+    parser.add_argument(
+        "--publish-at",
+        default=None,
+        help="Horário agendado ISO 8601 (ex: 2026-11-27T12:00:00-03:00). Quando usado, o YouTube agenda a estreia automaticamente.",
+    )
     args = parser.parse_args()
 
     from googleapiclient.http import MediaFileUpload
@@ -81,6 +86,13 @@ def main() -> None:
 
     youtube = get_authenticated_service(Path("client_secret.json"), Path("token.json"))
 
+    status_body = {
+        "privacyStatus": "private" if args.publish_at else args.privacy,
+        "selfDeclaredMadeForKids": False,
+    }
+    if args.publish_at:
+        status_body["publishAt"] = args.publish_at
+
     body = {
         "snippet": {
             "title": args.title[:100],
@@ -90,10 +102,7 @@ def main() -> None:
             "defaultLanguage": "pt-BR",
             "defaultAudioLanguage": "pt-BR",
         },
-        "status": {
-            "privacyStatus": args.privacy,
-            "selfDeclaredMadeForKids": False,
-        },
+        "status": status_body,
     }
 
     print(f"Enviando '{video_path.name}' para o YouTube como [{args.privacy}]...")

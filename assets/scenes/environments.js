@@ -1189,6 +1189,294 @@ window.VB = window.VB || {};
       VB.drawBoy(ctx, { x: W * 0.71, y: H * 0.57, scale: 1.2 * S, expr: "star_eyes", pose: "cheer", t });
       strokedText(ctx, "COMENTA:", W / 2, H * 0.11, Math.round(76 * S), "#FFFFFF", 15);
       strokedText(ctx, cena.cta_palavra || "\"VÓ\" 👵", W / 2, H * 0.19, Math.round(122 * S), "#FF66B2", 18);
+    } else if (envName === "chinelo_hook") {
+      drawSunburst(ctx, W, H, t, "#EA580C", "#581C87");
+      const z = (2.18 + Math.min(0.15, t * 0.08)) * S;
+      VB.drawMom(ctx, { x: W * 0.5, y: H * 0.74, scale: z, expr: "scream", pose: "closeup", crown: true, t });
+      VB.drawChinelo(ctx, W * 0.8, H * 0.44 + Math.sin(t * 8) * 18, 1.35 * S, -0.45 + Math.sin(t * 6) * 0.15, true);
+      VB.celBox(ctx, W * 0.14, H * 0.292, W * 0.72, 74, 22, "#16182D", 5.5, 0);
+      strokedText(ctx, "⚡ ITEM MÍTICO • Precisão: 999%", W / 2, H * 0.312, 35, "#FFD426", 7);
+
+      strokedText(ctx, "E SE O CHINELO", W / 2, H * 0.105, Math.round(62 * S), "#FFFFFF", 14);
+      strokedText(ctx, "DA SUA MÃE", W / 2, H * 0.175, Math.round(104 * S), "#FFD426", 18);
+      strokedText(ctx, "FOSSE ITEM MÍTICO?", W / 2, H * 0.242, Math.round(52 * S), "#5CE65C", 12);
+    } else if (envName === "chinelo_mira_laser") {
+      const floorY = H * 0.68;
+      ctx.fillStyle = "#312E81";
+      ctx.fillRect(0, 0, W, floorY);
+      ctx.fillStyle = "#17153B";
+      ctx.fillRect(0, floorY, W, H - floorY);
+
+      // Geladeira + Frango Congelado em bloco de gelo azul!
+      VB.celBox(ctx, 430, 385, 220, 420, 20, "#E2E8F0", 6, 0.18);
+      VB.celBox(ctx, 455, floorY - 125, 170, 110, 16, "#38BDF8", 6, 0.2);
+      strokedText(ctx, "❄ FRANGO", 540, floorY - 70, 30, "#FFFFFF", 6);
+
+      VB.drawMom(ctx, { x: 210, y: floorY - 185, scale: 1.1 * S, expr: "scream", pose: "cheer", nametag: "[BOSS] Mãe_Sniper", t });
+      VB.drawChinelo(ctx, 395, floorY - 385 + Math.sin(t * 10) * 12, 0.92 * S, -0.25, true);
+
+      VB.drawBoy(ctx, { x: 840, y: floorY - 185, scale: 1.08 * S, expr: "shocked_extreme", hp: 100, nametag: "Alvo_Travado", t });
+
+      // Linha laser de mira vermelha travada no Menino!
+      ctx.save();
+      ctx.strokeStyle = "#EF4444";
+      ctx.lineWidth = 6;
+      ctx.setLineDash([18, 12]);
+      ctx.beginPath();
+      ctx.moveTo(405, floorY - 375);
+      ctx.lineTo(840, floorY - 260);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.beginPath();
+      ctx.arc(840, floorY - 260, 48, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+
+      VB.celBox(ctx, W * 0.08, 180, W * 0.84, 110, 26, "#16182D", 6, 0);
+      strokedText(ctx, "🎯 MIRA AUTOMÁTICA ATIVADA!", W / 2, 218, 36, "#FF5733", 8);
+      strokedText(ctx, "Missão falha: Frango continua congelado", W / 2, 262, 32, "#FFD426", 7);
+    } else if (envName === "chinelo_curva_corredor") {
+      // Corredor em L onde o chinelo faz curva de 90 graus!
+      const floorY = H * 0.69;
+      ctx.fillStyle = "#3B2F4A";
+      ctx.fillRect(0, 0, W, floorY);
+      ctx.fillStyle = "#1E162B";
+      ctx.fillRect(0, floorY, W, H - floorY);
+
+      // Parede de quina no meio do corredor
+      VB.celBox(ctx, 470, 320, 140, floorY - 320, 10, "#64748B", 7, 0.28);
+
+      // Trilha curva neon amarela/rosa fazendo 90 graus ao redor da quina!
+      ctx.save();
+      ctx.strokeStyle = "#FFD426";
+      ctx.lineWidth = 14;
+      ctx.setLineDash([24, 14]);
+      ctx.beginPath();
+      ctx.moveTo(120, 560);
+      ctx.quadraticCurveTo(540, 320, 760, 620);
+      ctx.stroke();
+      ctx.restore();
+
+      const prog = (t * 0.85) % 1;
+      const cx = (1 - prog) * (1 - prog) * 140 + 2 * (1 - prog) * prog * 540 + prog * prog * 740;
+      const cy = (1 - prog) * (1 - prog) * 560 + 2 * (1 - prog) * prog * 340 + prog * prog * 620;
+      VB.drawChinelo(ctx, cx, cy, 1.15 * S, t * 14, true);
+
+      VB.drawBoy(ctx, { x: 845, y: floorY - 185, scale: 1.08 * S, expr: "shocked_extreme", nametag: "Escondido (Inútil)", t });
+
+      VB.celBox(ctx, W * 0.06, 180, W * 0.88, 112, 26, "#16182D", 6, 0);
+      strokedText(ctx, "⚙ FÍSICA DO ROBLOX QUEBRADA!", W / 2, 218, 36, "#FFD426", 8);
+      strokedText(ctx, "Chinelo Teleguiado dobrou 90° no corredor!", W / 2, 262, 32, "#5CE65C", 7);
+    } else if (envName === "chinelo_escudo_vo") {
+      // Crossover épico: Vó ativando escudo dourado protetor contra o chinelo!
+      const floorY = H * 0.68;
+      drawSunburst(ctx, W, H, t, "#6B21A8", "#3B0764");
+      ctx.fillStyle = "#191028";
+      ctx.fillRect(0, floorY, W, H - floorY);
+
+      VB.drawVovo(ctx, { x: 460, y: floorY - 185, scale: 1.14 * S, expr: "happy", crown: true, woodenSpoon: true, nametag: "👑 Vó_Protetora", t });
+      VB.drawBoy(ctx, { x: 825, y: floorY - 180, scale: 1.04 * S, expr: "star_eyes", pose: "cheer", nametag: "Neto_Imune", t });
+
+      // Domo de Escudo Dourado protetor acima da coroa e nametags!
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(640, floorY - 205, 405, Math.PI * 0.94, Math.PI * 1.66);
+      ctx.lineWidth = 16;
+      ctx.strokeStyle = "#FFD426";
+      ctx.stroke();
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = "#FFFFFF";
+      ctx.stroke();
+      ctx.restore();
+
+      // Chinelo ricocheteando no escudo!
+      VB.drawChinelo(ctx, 210, floorY - 320 + Math.sin(t * 18) * 20, 1.1 * S, -1.2 + t * 8, true);
+
+      VB.celBox(ctx, W * 0.06, 180, W * 0.88, 114, 26, "#16182D", 6, 0);
+      strokedText(ctx, "🛡 DEFESA SUPREMA DESBLOQUEADA!", W / 2, 218, 35, "#FFD426", 8);
+      strokedText(ctx, "Escudo da Vó bloqueia 100% de dano!", W / 2, 262, 34, "#5CE65C", 7);
+    } else if (envName === "chinelo_cta") {
+      drawSunburst(ctx, W, H, t, "#D97706", "#4C1D95");
+      drawSpeedLines(ctx, W, H, t);
+      VB.drawMom(ctx, { x: W * 0.25, y: H * 0.56, scale: 1.12 * S, expr: "scream", t });
+      VB.drawVovo(ctx, { x: W * 0.52, y: H * 0.56, scale: 1.14 * S, expr: "happy", crown: true, t });
+      VB.drawBoy(ctx, { x: W * 0.78, y: H * 0.57, scale: 1.12 * S, expr: "star_eyes", pose: "cheer", t });
+      strokedText(ctx, "COMENTA:", W / 2, H * 0.11, Math.round(76 * S), "#FFFFFF", 15);
+      strokedText(ctx, cena.cta_palavra || "\"CHINELO\" 🩴", W / 2, H * 0.19, Math.round(110 * S), "#FFD426", 18);
+    } else if (envName === "mercado_hook") {
+      drawSunburst(ctx, W, H, t, "#DC2626", "#7F1D1D");
+      const z = (2.18 + Math.min(0.15, t * 0.08)) * S;
+      VB.drawBoy(ctx, { x: W * 0.5, y: H * 0.74, scale: z, expr: "shocked_extreme", pose: "closeup", t });
+      VB.celBox(ctx, W * 0.14, H * 0.292, W * 0.72, 74, 22, "#16182D", 5.5, 0);
+      strokedText(ctx, "🛒 CARRINHO CHEIO • Saldo: R$ 0,00", W / 2, H * 0.312, 34, "#FF5733", 7);
+
+      strokedText(ctx, "SUA MÃE SUMIU", W / 2, H * 0.105, Math.round(62 * S), "#FFFFFF", 14);
+      strokedText(ctx, "NA FILA DO", W / 2, H * 0.175, Math.round(104 * S), "#FFD426", 18);
+      strokedText(ctx, "MERCADO?!", W / 2, H * 0.242, Math.round(68 * S), "#5CE65C", 14);
+    } else if (envName === "mercado_mae_corredor") {
+      const floorY = H * 0.68;
+      ctx.fillStyle = "#FEF3C7";
+      ctx.fillRect(0, 0, W, floorY);
+      ctx.fillStyle = "#1E293B";
+      ctx.fillRect(0, floorY, W, H - floorY);
+
+      // Prateleiras de supermercado cheias de produtos coloridos (bem abaixo do HUD Y>=360)
+      for (let row = 0; row < 3; row++) {
+        const sy = 425 + row * 145;
+        VB.celBox(ctx, 60, sy, 420, 26, 8, "#64748B", 5, 0);
+        for (let p = 0; p < 5; p++) {
+          VB.celBox(ctx, 82 + p * 78, sy - 60, 58, 60, 10, p % 2 === 0 ? "#EF4444" : "#3B82F6", 5, 0.2);
+        }
+      }
+
+      // Mãe sumindo pequena lá no fundo à direita!
+      VB.drawMom(ctx, { x: 845, y: floorY - 220, scale: 0.72 * S, expr: "happy", pose: "cheer", nametag: "Mãe (Foi no Corredor 99)", t });
+
+      // Menino sozinho segurando o carrinho cheio
+      VB.drawBoy(ctx, { x: 310, y: floorY - 185, scale: 1.12 * S, expr: "shocked_extreme", nametag: "Sozinho_Na_Fila", t });
+      VB.celBox(ctx, 435, floorY - 125, 220, 120, 16, "#94A3B8", 6, 0.2);
+      strokedText(ctx, "🛒 COMPRAS", 545, floorY - 65, 28, "#0F172A", 0);
+
+      VB.celBox(ctx, W * 0.07, 180, W * 0.86, 112, 26, "#16182D", 6, 0);
+      strokedText(ctx, "⚠ MISSÃO DE SOBREVIVÊNCIA ATIVADA", W / 2, 218, 34, "#FFD426", 8);
+      strokedText(ctx, "Mãe saiu da fila • Sua vez está chegando!", W / 2, 262, 32, "#FF5733", 7);
+    } else if (envName === "mercado_caixa_laser") {
+      const floorY = H * 0.68;
+      ctx.fillStyle = "#1E293B";
+      ctx.fillRect(0, 0, W, floorY);
+      ctx.fillStyle = "#0F172A";
+      ctx.fillRect(0, floorY, W, H - floorY);
+
+      // Esteira preta do caixa passando produtos
+      VB.celBox(ctx, 180, floorY - 90, 560, 120, 16, "#334155", 6, 0.22);
+      VB.celBox(ctx, 210, floorY - 108, 490, 26, 8, "#111827", 5, 0);
+      VB.celBox(ctx, 360 - ((t * 120) % 140), floorY - 165, 64, 58, 10, "#F59E0B", 5, 0.2);
+
+      VB.drawCaixa(ctx, { x: 815, y: floorY - 190, scale: 1.12 * S, expr: "side_eye", scanner: true, nametag: "[BOSS] Caixa_Turbo", t });
+      VB.drawBoy(ctx, { x: 235 + Math.sin(t * 40) * 6, y: floorY - 185, scale: 1.08 * S, expr: "shocked_extreme", hp: 10, nametag: "R$ 0,00 no Bolso!", t });
+
+      VB.celBox(ctx, W * 0.06, 180, W * 0.88, 116, 26, "#16182D", 6, 0);
+      const totalVal = (412 + t * 24).toFixed(2).replace(".", ",");
+      strokedText(ctx, `🚨 BIP! BIP! TOTAL: R$ ${totalVal}`, W / 2, 218, 38, "#FF5733", 8);
+      strokedText(ctx, "Faltam 2 itens • Cadê a Mãe?!", W / 2, 264, 34, "#FFD426", 7);
+    } else if (envName === "mercado_resgate_epico") {
+      drawSunburst(ctx, W, H, t, "#10B981", "#064E3B");
+      const floorY = H * 0.68;
+      ctx.fillStyle = "#0D1F1A";
+      ctx.fillRect(0, floorY, W, H - floorY);
+
+      VB.drawMom(ctx, { x: 315, y: floorY - 190, scale: 1.16 * S, expr: "star_eyes", pose: "cheer", crown: true, nametag: "👑 Mãe_Salvadora", t });
+      // Cartão dourado brilhando na mão da Mãe!
+      VB.celBox(ctx, 435, floorY - 220, 110, 72, 12, "#FFD426", 6, 0.15);
+      strokedText(ctx, "VIP", 490, floorY - 184, 28, "#78350F", 0);
+
+      VB.drawBoy(ctx, { x: 765, y: floorY - 185, scale: 1.1 * S, expr: "star_eyes", pose: "cheer", nametag: "Ufa_Salvo!", t });
+
+      VB.celBox(ctx, W * 0.07, 180, W * 0.86, 114, 26, "#16182D", 6, 0);
+      strokedText(ctx, "✅ RESGATE NO ÚLTIMO SEGUNDO!", W / 2, 218, 36, "#5CE65C", 8);
+      strokedText(ctx, "Pagamento Aprovado • Você sobreviveu!", W / 2, 262, 33, "#FFD426", 7);
+    } else if (envName === "mercado_cta") {
+      drawSunburst(ctx, W, H, t, "#2563EB", "#1E1B4B");
+      drawSpeedLines(ctx, W, H, t);
+      VB.drawMom(ctx, { x: W * 0.28, y: H * 0.56, scale: 1.18 * S, expr: "happy", crown: true, t });
+      VB.drawBoy(ctx, { x: W * 0.72, y: H * 0.56, scale: 1.22 * S, expr: "star_eyes", pose: "cheer", t });
+      strokedText(ctx, "COMENTA:", W / 2, H * 0.11, Math.round(76 * S), "#FFFFFF", 15);
+      strokedText(ctx, cena.cta_palavra || "\"MERCADO\" 🛒", W / 2, H * 0.19, Math.round(108 * S), "#FFD426", 18);
+    } else if (envName === "bateria_hook") {
+      drawSunburst(ctx, W, H, t, "#16A34A", "#14532D");
+      const z = (2.18 + Math.min(0.15, t * 0.08)) * S;
+      VB.drawBoy(ctx, { x: W * 0.5, y: H * 0.74, scale: z, expr: "shocked_extreme", pose: "closeup", holdingTablet: true, t });
+
+      VB.celBox(ctx, W * 0.16, H * 0.292, W * 0.68, 74, 22, "#16182D", 5.5, 0);
+      strokedText(ctx, "🔋 BATERIA 12% = VIDA CRÍTICA!", W / 2, H * 0.312, 35, "#FF5733", 7);
+
+      strokedText(ctx, "SUA BATERIA =", W / 2, H * 0.105, Math.round(64 * S), "#FFFFFF", 14);
+      strokedText(ctx, "SUA VIDA", W / 2, H * 0.175, Math.round(116 * S), "#5CE65C", 18);
+      strokedText(ctx, "NO ROBLOX!", W / 2, H * 0.242, Math.round(64 * S), "#FFD426", 14);
+    } else if (envName === "bateria_rua_sol") {
+      const roadY = H * 0.66;
+      drawBrazilianNeighborhood(ctx, W, H, roadY, S);
+
+      const curHp = Math.max(8, 60 - Math.floor(t * 14));
+      VB.drawBoy(ctx, {
+        x: 685,
+        y: roadY - 115,
+        scale: 1.06 * S,
+        expr: "shocked_extreme",
+        holdingTablet: true,
+        hp: curHp,
+        nametag: `Bateria: ${curHp}%`,
+        t,
+      });
+
+      VB.celBox(ctx, W * 0.07, 180, W * 0.86, 114, 26, "#16182D", 6, 0);
+      strokedText(ctx, "☀ BRILHO NO MÁXIMO = DANO SOLAR!", W / 2, 218, 35, "#FFD426", 8);
+      strokedText(ctx, "-40% de Vida instantâneo no sol!", W / 2, 262, 35, "#FF5733", 8);
+    } else if (envName === "bateria_disputa_tomada") {
+      const floorY = H * 0.68;
+      ctx.fillStyle = "#312E81";
+      ctx.fillRect(0, 0, W, floorY);
+      ctx.fillStyle = "#14122E";
+      ctx.fillRect(0, floorY, W, H - floorY);
+
+      // Única tomada sagrada brilhando no centro da parede!
+      ctx.beginPath();
+      ctx.arc(540, floorY - 190, 95 + Math.sin(t * 10) * 10, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(255, 212, 38, 0.28)";
+      ctx.fill();
+      VB.celBox(ctx, 485, floorY - 255, 110, 135, 20, "#F8FAFC", 6, 0.15);
+      [-22, 22].forEach((px) => {
+        ctx.beginPath();
+        ctx.arc(540 + px, floorY - 188, 9, 0, Math.PI * 2);
+        ctx.fillStyle = "#0F172A";
+        ctx.fill();
+      });
+
+      VB.drawMom(ctx, { x: 245, y: floorY - 185, scale: 1.1 * S, expr: "scream", pose: "cheer", nametag: "Mãe (2% Bateria!)", t });
+      VB.drawBoy(ctx, { x: 835, y: floorY - 185, scale: 1.08 * S, expr: "shocked_extreme", hp: 4, nametag: "Você (4% Bateria!)", t });
+
+      VB.celBox(ctx, W * 0.06, 180, W * 0.88, 114, 26, "#16182D", 6, 0);
+      strokedText(ctx, "⚡ ÚLTIMA TOMADA DA CASA — PvP ON!", W / 2, 218, 35, "#FFD426", 8);
+      strokedText(ctx, "Quem desligar chega a 0% de vida!", W / 2, 262, 34, "#FF5733", 7);
+    } else if (envName === "bateria_powerbank_vip") {
+      drawSunburst(ctx, W, H, t, "#22C55E", "#065F46");
+      const floorY = H * 0.68;
+      ctx.fillStyle = "#08221B";
+      ctx.fillRect(0, floorY, W, H - floorY);
+
+      VB.drawBoy(ctx, {
+        x: 420,
+        y: floorY - 195 - Math.abs(Math.sin(t * 10)) * 28,
+        scale: 1.18 * S,
+        expr: "star_eyes",
+        pose: "cheer",
+        goldenShoes: true,
+        backpack: true,
+        hp: 100,
+        nametag: "⚡ Bateria_999%",
+        t,
+      });
+
+      VB.drawCaramelo(ctx, {
+        x: 810,
+        y: floorY - 110,
+        scale: 1.12 * S,
+        crown: true,
+        sunglasses: true,
+        pose: "cheer",
+        nametag: "Pet_Carregado",
+        t,
+      });
+
+      VB.celBox(ctx, W * 0.06, 180, W * 0.88, 114, 26, "#16182D", 6, 0);
+      strokedText(ctx, "🔋 POWERBANK LENDÁRIO EQUIPADO!", W / 2, 218, 35, "#5CE65C", 8);
+      strokedText(ctx, "Modo Imortal Ativado (+99.000 mAh)", W / 2, 262, 34, "#FFD426", 7);
+    } else if (envName === "bateria_cta") {
+      drawSunburst(ctx, W, H, t, "#10B981", "#1E1B4B");
+      drawSpeedLines(ctx, W, H, t);
+      VB.drawBoy(ctx, { x: W * 0.5, y: H * 0.55, scale: 1.44 * S, expr: "star_eyes", pose: "cheer", goldenShoes: true, holdingTablet: true, nametag: "Qual sua % agora?", t });
+      strokedText(ctx, "COMENTA AGORA:", W / 2, H * 0.11, Math.round(70 * S), "#FFFFFF", 15);
+      strokedText(ctx, cena.cta_palavra || "SUA BATERIA % 🔋", W / 2, H * 0.19, Math.round(92 * S), "#5CE65C", 18);
     }
 
     if (isL && cena.hud_dias) {
