@@ -1,0 +1,16 @@
+# Dependências e builds
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+
+# Arquivos gerados / mídia pesada
+output/
+*.mp4
+*.mp3
+*.wav
+frames/
+
+# Segredos e chaves de API
+.env
+.env.local
