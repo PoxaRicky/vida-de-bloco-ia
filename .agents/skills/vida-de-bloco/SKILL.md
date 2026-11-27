@@ -59,7 +59,9 @@ Este fluxo automatiza de ponta a ponta a criação de vídeos originais de alta 
 ## 4. Aprovação do Usuário, Analytics & Escala de 10 Vídeos/Dia
 1. **Análise de Vídeos Virais (`check_analytics.py`):** Antes de criar novos lotes, rode `python -u scripts/check_analytics.py` para ver os vídeos com maior velocidade de views/hora (`vph`) e likes no canal `@VidadeBlocoBR`, dobrando a aposta nos temas vencedores.
 2. **PARE E MOSTRE AO USUÁRIO PRIMEIRO:** Envie os links clicáveis dos `.mp4`, das thumbnails e os títulos/descrições sugeridos. **Jamais publique sem aprovação explícita!**
-3. **Após o "pode publicar" do usuário:**
-   - **Publicação imediata:** `python -u scripts/upload_youtube.py --video output/<slug>_poxarique.mp4 --title "<Título>" --description "<Descrição>" --tags "<tags>" --privacy public --thumbnail output/<slug>_thumb_16x9.jpg`
+3. **Após o "pode publicar" ou "publique os vídeos pendentes" do usuário:**
+   - Sempre salve vídeos já aprovados que aguardam janela de upload em `scripts/fila_pendentes.json` (`"status": "pending"`).
+   - Quando o usuário disser *"pode publicar"* ou *"publique os vídeos pendentes"*, rode imediatamente `python -u scripts/publish_pending.py` (ele publica cada item pendente com título, descrição, tags e thumbnail, grava o link publicado e pausa com segurança caso o limite de 24h do YouTube ainda esteja ativo).
+   - **Publicação avulsa imediata:** `python -u scripts/upload_youtube.py --video output/<slug>_poxarique.mp4 --title "<Título>" --description "<Descrição>" --tags "<tags>" --privacy public --thumbnail output/<slug>_thumb_16x9.jpg`
    - **Escala de 10 vídeos/dia agendados (sem spam):** Salve a fila aprovada em JSON e rode `python -u scripts/schedule_batch_youtube.py --date YYYY-MM-DD --manifest scripts/fila_publicacao.json` (usa `--publish-at` na API do YouTube para soltar automaticamente nos 10 horários de pico entre `08:00` e `20:00` `-03:00`).
 4. Se precisar excluir vídeos antigos no YouTube, use `python -u scripts/delete_youtube.py <videoId1> <videoId2>`.
