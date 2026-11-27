@@ -109,14 +109,509 @@ window.VB = window.VB || {};
     ctx.restore();
   }
 
-  function drawFace(ctx, expr, isMom, t) {
+  // Contexto global de fala por frame (sincronizado com WordBoundary do TTS)
+  VB._talkCtx = { wordsTiming: null, speaker: "", t: 0, sceneDur: 3 };
+  VB.lastTargets = {};
+  VB._recordTarget = function (role, opts = {}, st = null) {
+    if (!role) return;
+    const tx = (opts.x || 0) + (st ? st.offsetX : 0);
+    const ty = (opts.y || 0) + (st ? st.offsetY : 0);
+    VB.lastTargets[String(role).toLowerCase()] = { x: tx, y: ty, scale: opts.scale || 1 };
+    if (opts.id) {
+      VB.lastTargets[String(opts.id).toLowerCase()] = { x: tx, y: ty, scale: opts.scale || 1 };
+    }
+  };
+
+  VB.setTalkContext = function (wordsTiming, speaker, t, sceneDur = 3) {
+    VB._talkCtx = {
+      wordsTiming: Array.isArray(wordsTiming) ? wordsTiming : null,
+      speaker: (speaker || "").toLowerCase(),
+      t: t || 0,
+      sceneDur: sceneDur || 3,
+    };
+  };
+
+  VB.getSpeechEnvelope = function (t, forceTalk = false) {
+    const wt = VB._talkCtx.wordsTiming;
+    if (wt && wt.length > 0) {
+      for (let i = 0; i < wt.length; i++) {
+        const w = wt[i];
+        if (t >= w.startSec - 0.02 && t <= w.endSec + 0.03) {
+          const localDur = Math.max(0.08, w.endSec - w.startSec);
+          const localP = Math.max(0, Math.min(1, (t - w.startSec) / localDur));
+          const syllables = Math.max(1, Math.min(4, Math.ceil((w.text || "").length / 3)));
+          const env = Math.sin(localP * Math.PI);
+          const syllPulse = 0.45 + 0.55 * Math.abs(Math.sin(localP * Math.PI * syllables));
+          return { speaking: true, open: 0.35 + 0.65 * env * syllPulse };
+        }
+      }
+      return { speaking: false, open: forceTalk ? 0.25 + 0.45 * Math.abs(Math.sin(t * 13)) : 0.06 };
+    }
+    if (forceTalk) {
+      const gate = Math.sin(t * 5.2) > -0.25 ? 1 : 0.2;
+      return { speaking: gate > 0.5, open: gate * (0.35 + 0.6 * Math.abs(Math.sin(t * 15))) };
+    }
+    return { speaking: false, open: 0.08 };
+  };
+
+  VB.isSpeakerActive = function (charRole) {
+    if (!charRole || !VB._talkCtx.speaker) return false;
+    const sp = VB._talkCtx.speaker;
+    const r = charRole.toLowerCase();
+    if (sp === r) return true;
+    if (sp === "vovo" && r === "vo") return true;
+    if (sp === "vo" && r === "vovo") return true;
+    return false;
+  };
+
+  // Máquina de estados e física contínua para todos os rigs
+  VB.computeAnimState = function (opts = {}, role = "") {
+    const t = opts.t || 0;
+    const progress = opts.progress !== undefined ? opts.progress : 0;
+    const raw = String(opts.state || opts.anim || opts.pose || "idle").toLowerCase();
+    const isCloseup = raw === "closeup" || opts.pose === "closeup";
+    const autoTalk = opts.talk === true || raw === "talk" || VB.isSpeakerActive(role);
+    const phaseSeed = ((opts.x || 0) * 0.013 + (role.charCodeAt(0) || 7) * 0.37) % 3.0;
+
+    // Piscada natural periódica a cada ~2.7s (desativada em thumbnails!)
+    const blinkCycle = (t + phaseSeed) % 2.75;
+    const isBlinking = !VB._isThumb && blinkCycle > 2.58 && blinkCycle < 2.71;
+
+    const st = {
+      state: raw,
+      isCloseup,
+      offsetX: 0,
+      offsetY: 0,
+      scaleX: 1,
+      scaleY: 1,
+      torsoTilt: 0,
+      headRot: 0,
+      legSwing: 0,
+      legLiftL: 0,
+      legLiftR: 0,
+      armRotL: -0.2,
+      armRotR: 0.2,
+      isBlinking,
+      showDust: false,
+      showPanicFx: false,
+      showCelebrateFx: false,
+      showFallLines: false,
+      forcedExpr: null,
+      speech: VB.getSpeechEnvelope(t, autoTalk),
+    };
+
+    if (raw === "run") {
+      const cyc = t * 18;
+      const s = Math.sin(cyc);
+      const bounce = Math.abs(s);
+      st.offsetY = -bounce * 22;
+      st.scaleX = 1 + (1 - bounce) * 0.045;
+      st.scaleY = 1 - (1 - bounce) * 0.045;
+      st.torsoTilt = 0.14;
+      st.headRot = -0.05 + Math.sin(cyc * 0.5) * 0.04;
+      st.legSwing = s * 32;
+      st.legLiftL = Math.max(0, s) * -22;
+      st.legLiftR = Math.max(0, -s) * -22;
+      st.armRotL = s * 0.95 - 0.2;
+      st.armRotR = -s * 0.95 + 0.2;
+      st.showDust = !isCloseup;
+    } else if (raw === "walk") {
+      const cyc = t * 10.5;
+      const s = Math.sin(cyc);
+      st.offsetY = -Math.abs(s) * 10;
+      st.torsoTilt = 0.05;
+      st.headRot = Math.sin(cyc * 0.5) * 0.03;
+      st.legSwing = s * 18;
+      st.legLiftL = Math.max(0, s) * -12;
+      st.legLiftR = Math.max(0, -s) * -12;
+      st.armRotL = s * 0.52 - 0.15;
+      st.armRotR = -s * 0.52 + 0.15;
+    } else if (raw === "jump") {
+      const jc = opts.jumpPhase !== undefined ? opts.jumpPhase : ((t * 1.35) % 1);
+      if (jc < 0.16) {
+        // Antecipação (squash no chão)
+        const p = Math.sin((jc / 0.16) * Math.PI * 0.5);
+        st.scaleX = 1 + 0.15 * p;
+        st.scaleY = 1 - 0.15 * p;
+        st.offsetY = 14 * p;
+        st.armRotL = 0.52 * p;
+        st.armRotR = -0.52 * p;
+      } else if (jc < 0.82) {
+        // Parábola no ar + stretch
+        const airP = (jc - 0.16) / 0.66;
+        const arc = 4 * airP * (1 - airP);
+        st.offsetY = -arc * (opts.jumpHeight !== undefined ? opts.jumpHeight : 135);
+        const velStretch = Math.abs(0.5 - airP) * 0.18;
+        st.scaleX = 0.91 - velStretch * 0.25;
+        st.scaleY = 1.1 + velStretch * 0.35;
+        st.armRotL = -2.42 + Math.sin(t * 12) * 0.12;
+        st.armRotR = 2.42 - Math.sin(t * 12) * 0.12;
+        st.legLiftL = -18 * arc;
+        st.legLiftR = -8 * arc;
+      } else {
+        // Impacto ao aterrissar (squash)
+        const lp = Math.sin(((jc - 0.82) / 0.18) * Math.PI);
+        st.scaleX = 1 + 0.16 * lp;
+        st.scaleY = 1 - 0.15 * lp;
+        st.offsetY = 12 * lp;
+        st.armRotL = -0.6 * lp - 0.2;
+        st.armRotR = 0.6 * lp + 0.2;
+        st.showDust = !isCloseup && lp > 0.35;
+      }
+    } else if (raw === "fall") {
+      st.scaleX = 0.91;
+      st.scaleY = 1.11;
+      st.offsetX = Math.sin(t * 28) * 3;
+      st.offsetY = Math.sin(t * 14) * 8;
+      st.armRotL = -2.55 + Math.sin(t * 24) * 0.35;
+      st.armRotR = 2.55 + Math.cos(t * 24) * 0.35;
+      st.legSwing = Math.sin(t * 24) * 20;
+      st.showFallLines = true;
+      st.forcedExpr = "shocked_extreme";
+    } else if (raw === "shock" || raw === "panic") {
+      st.offsetX = Math.sin(t * 54) * 6.5;
+      st.offsetY = -Math.abs(Math.sin(t * 18)) * 7;
+      st.scaleX = 1 + Math.sin(t * 28) * 0.035;
+      st.scaleY = 1 - Math.sin(t * 28) * 0.035;
+      st.headRot = Math.sin(t * 36) * 0.05;
+      st.armRotL = -2.25 + Math.sin(t * 32) * 0.22;
+      st.armRotR = 2.25 - Math.sin(t * 32) * 0.22;
+      st.showPanicFx = true;
+      st.forcedExpr = "shocked_extreme";
+    } else if (raw === "celebrate" || raw === "cheer") {
+      const hop = Math.abs(Math.sin(t * 11.5));
+      st.offsetY = isCloseup ? -hop * 10 : -hop * 28;
+      st.scaleX = 1 - (hop - 0.45) * 0.07;
+      st.scaleY = 1 + (hop - 0.45) * 0.08;
+      st.headRot = Math.sin(t * 11.5) * 0.06;
+      st.armRotL = -2.45 + Math.sin(t * 11.5) * 0.32;
+      st.armRotR = 2.45 + Math.cos(t * 11.5) * 0.32;
+      st.legLiftL = -hop * 12;
+      st.legLiftR = -hop * 12;
+      st.showCelebrateFx = true;
+    } else if (raw === "talk" || autoTalk) {
+      const breath = Math.sin(t * 3.6 + phaseSeed);
+      const emph = st.speech.speaking ? st.speech.open : 0.15;
+      st.offsetY = breath * -3.5 - emph * 3;
+      st.scaleX = 1 - breath * 0.012;
+      st.scaleY = 1 + breath * 0.016 + emph * 0.015;
+      st.headRot = Math.sin(t * 5.8 + phaseSeed) * 0.04 * (0.4 + emph);
+      st.armRotL = -0.32 - Math.sin(t * 7.5) * 0.18 * (0.3 + emph);
+      st.armRotR = 0.32 + Math.cos(t * 6.8) * 0.18 * (0.3 + emph);
+    } else {
+      // idle natural contínuo
+      const breath = Math.sin(t * 3.2 + phaseSeed);
+      st.offsetY = breath * -3.5;
+      st.scaleX = 1 - breath * 0.012;
+      st.scaleY = 1 + breath * 0.018;
+      st.headRot = Math.sin(t * 2.1 + phaseSeed) * 0.026;
+      st.armRotL = -0.2 + Math.sin(t * 2.8 + phaseSeed) * 0.07;
+      st.armRotR = 0.2 - Math.sin(t * 2.8 + phaseSeed) * 0.07;
+    }
+    return st;
+  };
+
+  VB.drawStateParticles = function (ctx, st, t) {
+    if (st.showDust) {
+      ctx.save();
+      for (let i = 0; i < 3; i++) {
+        const p = ((t * 4.2 + i * 0.33) % 1);
+        const dx = -55 - p * 68 - i * 14;
+        const dy = 252 - p * 26;
+        const r = (1 - p) * 20 + 5;
+        ctx.globalAlpha = (1 - p) * 0.65;
+        ctx.beginPath();
+        ctx.arc(dx, dy, r, 0, Math.PI * 2);
+        ctx.fillStyle = "#F1F5F9";
+        ctx.fill();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = OUTLINE;
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+    if (st.showFallLines) {
+      ctx.save();
+      ctx.strokeStyle = "rgba(255,255,255,0.75)";
+      ctx.lineWidth = 5;
+      ctx.lineCap = "round";
+      [-86, -34, 38, 92].forEach((lx, idx) => {
+        const shift = ((t * 420 + idx * 45) % 120);
+        ctx.beginPath();
+        ctx.moveTo(lx, -220 - shift);
+        ctx.lineTo(lx, -285 - shift);
+        ctx.stroke();
+      });
+      ctx.restore();
+    }
+    if (st.showPanicFx) {
+      const dropY = ((t * 95) % 45);
+      drawSweatDrop(ctx, -128, -145 + dropY, 1.05);
+      drawSweatDrop(ctx, 128, -125 + ((t * 95 + 22) % 45), 0.95);
+      // Exclamação animada acima da cabeça
+      ctx.save();
+      const pop = 1 + Math.sin(t * 22) * 0.14;
+      ctx.translate(128, -235);
+      ctx.scale(pop, pop);
+      ctx.rotate(0.18);
+      VB.celBox(ctx, -12, -46, 24, 52, 10, "#FFD426", 5, 0);
+      VB.celBox(ctx, -12, 14, 24, 22, 10, "#FF5733", 5, 0);
+      ctx.restore();
+    }
+    if (st.showCelebrateFx) {
+      ctx.save();
+      const colors = ["#FFD426", "#5CE65C", "#38BDF8", "#FF66B2", "#F97316"];
+      for (let i = 0; i < 8; i++) {
+        const p = ((t * 1.7 + i * 0.13) % 1);
+        const ang = -Math.PI * 0.88 + (i / 7) * Math.PI * 0.76;
+        const dist = 135 + p * 145;
+        const cx = Math.cos(ang) * dist;
+        const cy = -120 + Math.sin(ang) * dist + p * p * 55;
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(t * 6 + i);
+        ctx.globalAlpha = Math.min(1, (1 - p) * 1.4);
+        VB.celBox(ctx, -9, -9, 18, 18, 5, colors[i % colors.length], 3.5, 0);
+        ctx.restore();
+      }
+      ctx.restore();
+    }
+  };
+
+  function normalizeAccessories(opts = {}) {
+    const a = Object.assign({}, opts.accessories || {});
+    if (opts.hat !== undefined) a.hat = opts.hat;
+    if (opts.glasses !== undefined) a.glasses = opts.glasses;
+    if (opts.apron !== undefined) a.apron = opts.apron;
+    if (opts.crown !== undefined) a.crown = opts.crown;
+    if (opts.backpack !== undefined) a.backpack = opts.backpack;
+    if (opts.megaphone !== undefined) a.megaphone = opts.megaphone;
+    if (opts.item_in_hand !== undefined) a.item_in_hand = opts.item_in_hand;
+    return a;
+  }
+
+  VB.drawHeadAccessories = function (ctx, acc = {}, t = 0) {
+    // Óculos modulares
+    if (acc.glasses) {
+      const gType = String(acc.glasses);
+      if (gType === "sunglasses" || gType === "cool") {
+        VB.celBox(ctx, -84, -34, 76, 44, 10, "#111827", 5.5, 0);
+        VB.celBox(ctx, 8, -34, 76, 44, 10, "#111827", 5.5, 0);
+        ctx.lineWidth = 6;
+        ctx.strokeStyle = OUTLINE;
+        ctx.beginPath();
+        ctx.moveTo(-8, -14);
+        ctx.lineTo(8, -14);
+        ctx.stroke();
+      } else if (gType === "round") {
+        [-48, 48].forEach((gx) => {
+          ctx.beginPath();
+          ctx.arc(gx, -8, 31, 0, Math.PI * 2);
+          ctx.fillStyle = "rgba(254, 249, 195, 0.25)";
+          ctx.fill();
+          ctx.lineWidth = 5.5;
+          ctx.strokeStyle = "#D97706";
+          ctx.stroke();
+        });
+        ctx.beginPath();
+        ctx.moveTo(-17, -8);
+        ctx.lineTo(17, -8);
+        ctx.lineWidth = 5.5;
+        ctx.strokeStyle = "#D97706";
+        ctx.stroke();
+      } else {
+        // square / default
+        [-48, 48].forEach((gx) => {
+          VB.celBox(ctx, gx - 36, -34, 72, 48, 12, "rgba(186, 230, 253, 0.35)", 5.5, 0);
+        });
+        ctx.beginPath();
+        ctx.moveTo(-12, -12);
+        ctx.lineTo(12, -12);
+        ctx.lineWidth = 5.5;
+        ctx.strokeStyle = OUTLINE;
+        ctx.stroke();
+      }
+    }
+
+    // Chapéus modulares
+    if (acc.hat) {
+      const hType = String(acc.hat);
+      if (hType === "chef" || hType === "baker") {
+        VB.celBox(ctx, -78, -162, 156, 76, 34, "#FFFFFF", 6, 0.2);
+        VB.celBox(ctx, -84, -102, 168, 28, 10, "#F1F5F9", 6, 0.18);
+      } else if (hType === "graduation") {
+        VB.celBox(ctx, -76, -118, 152, 34, 10, "#1E293B", 6, 0.2);
+        ctx.beginPath();
+        ctx.moveTo(-122, -118);
+        ctx.lineTo(0, -146);
+        ctx.lineTo(122, -118);
+        ctx.lineTo(0, -94);
+        ctx.closePath();
+        ctx.fillStyle = "#0F172A";
+        ctx.fill();
+        ctx.lineWidth = 6;
+        ctx.strokeStyle = OUTLINE;
+        ctx.stroke();
+        VB.celBox(ctx, 94, -116, 12, 44, 5, "#FFD426", 4, 0);
+      } else if (hType === "beanie") {
+        VB.celBox(ctx, -104, -124, 208, 66, 32, "#7C3AED", 6, 0.22);
+        VB.celBox(ctx, -108, -82, 216, 26, 12, "#5B21B6", 5.5, 0.2);
+      } else {
+        // cap
+        VB.celBox(ctx, -104, -120, 208, 60, 28, "#EF4444", 6, 0.22);
+        VB.celBox(ctx, -40, -78, 165, 22, 10, "#B91C1C", 5.5, 0);
+      }
+    }
+
+    // Coroa Admin dourada
+    if (acc.crown) {
+      ctx.save();
+      ctx.translate(0, acc.hat ? -162 : -126);
+      ctx.beginPath();
+      ctx.moveTo(-64, 18);
+      ctx.lineTo(-74, -36);
+      ctx.lineTo(-32, -8);
+      ctx.lineTo(0, -48);
+      ctx.lineTo(32, -8);
+      ctx.lineTo(74, -36);
+      ctx.lineTo(64, 18);
+      ctx.closePath();
+      ctx.fillStyle = "#FFD426";
+      ctx.fill();
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = OUTLINE;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(0, -8, 9, 0, Math.PI * 2);
+      ctx.fillStyle = "#EF4444";
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+  };
+
+  VB.drawHandAccessories = function (ctx, acc = {}, t = 0) {
+    if (acc.megaphone) {
+      ctx.save();
+      ctx.translate(118, 52);
+      ctx.rotate(-0.2 + Math.sin(t * 14) * 0.06);
+      ctx.beginPath();
+      ctx.moveTo(-22, -14);
+      ctx.lineTo(50, -38);
+      ctx.lineTo(50, 34);
+      ctx.lineTo(-22, 12);
+      ctx.closePath();
+      ctx.fillStyle = "#F8FAFC";
+      ctx.fill();
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = OUTLINE;
+      ctx.stroke();
+      VB.celBox(ctx, 42, -40, 18, 76, 8, "#EF4444", 5.5, 0.2);
+      // Ondas sonoras animadas
+      ctx.strokeStyle = "#FFD426";
+      ctx.lineWidth = 5;
+      for (let w = 1; w <= 2; w++) {
+        const pulse = ((t * 3 + w * 0.4) % 1) * 18;
+        ctx.beginPath();
+        ctx.arc(64 + pulse, -2, 16 + w * 12, -0.55, 0.55);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    const item = acc.item_in_hand;
+    if (!item) return;
+    if (item === "tablet") {
+      VB.drawTablet(ctx, 0, 96, 0.96);
+    } else if (item === "chinelo") {
+      VB.drawChinelo(ctx, 114, 56, 0.85, -0.55 + Math.sin(t * 12) * 0.15, true);
+    } else if (item === "clipboard") {
+      ctx.save();
+      ctx.translate(-108, 72);
+      ctx.rotate(-0.12);
+      VB.celBox(ctx, -36, -48, 72, 96, 12, "#B45309", 5.5, 0.2);
+      VB.celBox(ctx, -28, -36, 56, 76, 8, "#FFFFFF", 4, 0);
+      VB.celBox(ctx, -18, -54, 36, 16, 6, "#94A3B8", 4.5, 0);
+      ctx.restore();
+    } else if (item === "ruler") {
+      ctx.save();
+      ctx.translate(112, 42);
+      ctx.rotate(0.32 + Math.sin(t * 9) * 0.1);
+      VB.celBox(ctx, -12, -92, 24, 148, 6, "#FACC15", 5, 0.18);
+      ctx.restore();
+    } else if (item === "pix_phone") {
+      ctx.save();
+      ctx.translate(106, 62 + Math.sin(t * 10) * 4);
+      ctx.rotate(-0.14);
+      VB.celBox(ctx, -28, -48, 56, 96, 14, "#0F172A", 5.5, 0.18);
+      VB.celBox(ctx, -22, -38, 44, 74, 8, "#22C55E", 3.5, 0);
+      ctx.font = "900 18px 'Fredoka', sans-serif";
+      ctx.fillStyle = "#FFFFFF";
+      ctx.textAlign = "center";
+      ctx.fillText("PIX!", 0, 5);
+      ctx.restore();
+    } else if (item === "coxinha") {
+      ctx.save();
+      ctx.translate(106, 68);
+      ctx.beginPath();
+      ctx.moveTo(0, -38);
+      ctx.bezierCurveTo(34, -4, 32, 34, 0, 34);
+      ctx.bezierCurveTo(-32, 34, -34, -4, 0, -38);
+      ctx.fillStyle = "#F59E0B";
+      ctx.fill();
+      ctx.lineWidth = 5.5;
+      ctx.strokeStyle = OUTLINE;
+      ctx.stroke();
+      ctx.restore();
+    } else if (item === "bread_bag") {
+      VB.celBox(ctx, 56, 48, 76, 92, 14, "#D97706", 5.5, 0.22);
+      VB.celBox(ctx, 66, 24, 26, 42, 12, "#FBBF24", 5, 0.18);
+      VB.celBox(ctx, 94, 28, 26, 38, 12, "#F59E0B", 5, 0.18);
+    } else if (item === "wooden_spoon") {
+      ctx.save();
+      ctx.translate(106, 46);
+      ctx.rotate(0.28 + Math.sin(t * 8) * 0.12);
+      VB.celBox(ctx, -8, -70, 16, 110, 8, "#B45309", 5, 0.2);
+      ctx.beginPath();
+      ctx.ellipse(0, -86, 22, 30, 0, 0, Math.PI * 2);
+      ctx.fillStyle = "#D97706";
+      ctx.fill();
+      ctx.lineWidth = 5.5;
+      ctx.strokeStyle = OUTLINE;
+      ctx.stroke();
+      ctx.restore();
+    } else if (item === "money") {
+      ctx.save();
+      ctx.translate(104, 66);
+      ctx.rotate(-0.18 + Math.sin(t * 10) * 0.08);
+      VB.celBox(ctx, -46, -26, 92, 52, 10, "#22C55E", 5.5, 0.15);
+      ctx.font = "900 22px 'Fredoka', sans-serif";
+      ctx.fillStyle = "#064E3B";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("R$50", 0, 1);
+      ctx.restore();
+    }
+  };
+
+  function drawFace(ctx, expr, isMom, t, animSt = null) {
     ctx.save();
     ctx.strokeStyle = OUTLINE;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
 
+    const blinking = animSt && animSt.isBlinking && expr !== "shocked_extreme" && expr !== "star_eyes";
+
     // Olhos
-    if (expr === "shocked_extreme") {
+    if (blinking) {
+      [-48, 48].forEach((ox) => {
+        ctx.lineWidth = 7;
+        ctx.beginPath();
+        ctx.moveTo(ox - 24, -6);
+        ctx.quadraticCurveTo(ox, 4, ox + 24, -6);
+        ctx.stroke();
+      });
+    } else if (expr === "shocked_extreme") {
       [-52, 52].forEach((ox) => {
         ctx.beginPath();
         ctx.ellipse(ox, -10, 44, 54, 0, 0, Math.PI * 2);
@@ -135,7 +630,6 @@ window.VB = window.VB || {};
         ctx.fillStyle = "#FFFFFF";
         ctx.fill();
       });
-      // Sobrancelhas inclinadas de pânico
       ctx.lineWidth = 7;
       ctx.beginPath();
       ctx.moveTo(-88, -56);
@@ -173,7 +667,6 @@ window.VB = window.VB || {};
           ctx.fill();
           ctx.lineWidth = 5;
           ctx.stroke();
-          // Estrelinha dourada
           ctx.fillStyle = "#FFD426";
           ctx.beginPath();
           for (let i = 0; i < 10; i++) {
@@ -188,7 +681,6 @@ window.VB = window.VB || {};
         }
       });
     } else {
-      // Padrão / surpresa / óculos mãe
       [-48, 48].forEach((ox) => {
         ctx.beginPath();
         ctx.ellipse(ox, -8, 28, 20, 0, 0, Math.PI * 2);
@@ -202,14 +694,22 @@ window.VB = window.VB || {};
         ctx.fillStyle = isMom ? "#4BD6B4" : OUTLINE;
         ctx.fill();
       });
-      // Sobrancelhas arqueadas
       ctx.lineWidth = 6;
-      ctx.beginPath();
-      ctx.arc(-48, -32, 26, Math.PI * 1.15, Math.PI * 1.85);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(48, -32, 26, Math.PI * 1.15, Math.PI * 1.85);
-      ctx.stroke();
+      if (expr === "angry") {
+        ctx.beginPath();
+        ctx.moveTo(-74, -42);
+        ctx.lineTo(-22, -26);
+        ctx.moveTo(74, -42);
+        ctx.lineTo(22, -26);
+        ctx.stroke();
+      } else {
+        ctx.beginPath();
+        ctx.arc(-48, -32, 26, Math.PI * 1.15, Math.PI * 1.85);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(48, -32, 26, Math.PI * 1.15, Math.PI * 1.85);
+        ctx.stroke();
+      }
     }
 
     // Óculos quadrados modernos da Mãe com leve reflexo
@@ -222,7 +722,6 @@ window.VB = window.VB || {};
         ctx.fillRect(gx - 30, -24, 60, 22);
         ctx.restore();
       });
-      // Ponte dos óculos
       ctx.beginPath();
       ctx.moveTo(-10, -12);
       ctx.lineTo(10, -12);
@@ -231,27 +730,30 @@ window.VB = window.VB || {};
       ctx.stroke();
     }
 
-    // Boca (com leve lip-sync pelo tempo t)
-    const talkOpen = 0.85 + Math.abs(Math.sin(t * 14)) * 0.3;
+    // Boca sincronizada por envoltória de voz (WordBoundary) ou estado emocional
+    const speech = animSt ? animSt.speech : VB.getSpeechEnvelope(t, false);
+    const talkOpen = speech.speaking ? 0.55 + speech.open * 0.65 : 0.8 + Math.abs(Math.sin(t * 12)) * 0.25;
+
     if (expr === "shocked_extreme") {
+      const shOpen = speech.speaking ? 0.8 + speech.open * 0.35 : 0.92 + Math.sin(t * 16) * 0.08;
       ctx.save();
       ctx.beginPath();
-      ctx.roundRect(-44, 42, 88, 128 * talkOpen, 44);
+      ctx.roundRect(-44, 42, 88, 118 * shOpen, 44);
       ctx.fillStyle = "#4A1525";
       ctx.fill();
       ctx.clip();
       ctx.beginPath();
-      ctx.ellipse(0, 158 * talkOpen, 34, 22, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 148 * shOpen, 34, 22, 0, 0, Math.PI * 2);
       ctx.fillStyle = "#FF7597";
       ctx.fill();
       ctx.restore();
 
       ctx.beginPath();
-      ctx.roundRect(-44, 42, 88, 128 * talkOpen, 44);
+      ctx.roundRect(-44, 42, 88, 118 * shOpen, 44);
       ctx.lineWidth = 6;
       ctx.strokeStyle = OUTLINE;
       ctx.stroke();
-    } else if (expr === "side_eye") {
+    } else if (expr === "side_eye" && !speech.speaking) {
       ctx.lineWidth = 6;
       ctx.beginPath();
       ctx.moveTo(-24, 52);
@@ -259,24 +761,36 @@ window.VB = window.VB || {};
       ctx.stroke();
     } else if (expr === "oval_o") {
       ctx.beginPath();
-      ctx.ellipse(0, 56, 22, 30 * talkOpen, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 56, 22, 28 * talkOpen, 0, 0, Math.PI * 2);
       ctx.fillStyle = "#5A3B5C";
       ctx.fill();
       ctx.lineWidth = 5.5;
       ctx.stroke();
+    } else if (!speech.speaking && expr !== "scream") {
+      // Sorriso fechado/natural quando o personagem está em pausa de fala
+      ctx.lineWidth = 6.5;
+      ctx.strokeStyle = OUTLINE;
+      ctx.beginPath();
+      if (expr === "angry") {
+        ctx.moveTo(-28, 58);
+        ctx.quadraticCurveTo(0, 44, 28, 58);
+      } else {
+        ctx.moveTo(-30, 46);
+        ctx.quadraticCurveTo(0, 66, 30, 46);
+      }
+      ctx.stroke();
     } else {
-      // Boca D aberta (gritando/rindo/falando)
-      const mh = (expr === "scream" ? 56 : 42) * talkOpen;
+      // Boca D dinâmica sincronizada com as sílabas da fala ativa
+      const baseH = expr === "scream" ? 54 : 44;
+      const mh = Math.max(18, baseH * talkOpen);
       ctx.save();
       ctx.beginPath();
       ctx.roundRect(-42, 38, 84, mh, [12, 12, 38, 38]);
       ctx.fillStyle = "#4A1525";
       ctx.fill();
       ctx.clip();
-      // Dentes superiores brancos
       ctx.fillStyle = "#FFFFFF";
       ctx.fillRect(-44, 36, 88, 14);
-      // Língua rosa
       ctx.beginPath();
       ctx.ellipse(0, 38 + mh, 28, 16, 0, 0, Math.PI * 2);
       ctx.fillStyle = "#FF7597";
@@ -324,7 +838,9 @@ window.VB = window.VB || {};
 
   // Personagem Menino ("Você")
   VB.drawBoy = function (ctx, opts = {}) {
-    const rawExpr = opts.expr || opts.expression || "side_eye";
+    const st = VB.computeAnimState(opts, "menino");
+    const acc = normalizeAccessories(opts);
+    const rawExpr = st.forcedExpr || opts.expr || opts.expression || "side_eye";
     const expr = rawExpr === "shock" ? "shocked_extreme" : rawExpr;
     const {
       x = 540,
@@ -338,30 +854,36 @@ window.VB = window.VB || {};
       hp = null,
       t = 0,
       nametag = "",
+      flip = false,
     } = opts;
 
     ctx.save();
-    ctx.translate(x, y);
-    ctx.scale(scale, scale);
+    VB._recordTarget("menino", opts, st);
+    ctx.translate(x + st.offsetX, y + st.offsetY);
+    ctx.scale((flip ? -scale : scale) * st.scaleX, scale * st.scaleY);
 
-    // Sombra no chão
-    if (pose !== "closeup") {
+    if (!st.isCloseup && st.state !== "fall") {
+      const shScale = Math.max(0.55, 1 + st.offsetY * 0.0025);
       ctx.beginPath();
-      ctx.ellipse(0, 265, 95, 22, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 265 - st.offsetY * 0.65, 95 * shScale, 22 * shScale, 0, 0, Math.PI * 2);
       ctx.fillStyle = "rgba(0,0,0,0.22)";
       ctx.fill();
     }
 
-    // Mochila escolar nas costas (quando em cena de escola)
-    if (backpack) {
-      VB.celBox(ctx, -98, 2, 196, 152, 28, "#EF4444", 6, 0.22);
+    VB.drawStateParticles(ctx, st, t);
+
+    ctx.save();
+    ctx.rotate(st.torsoTilt);
+
+    if (backpack || acc.backpack) {
+      const bpColor = typeof acc.backpack === "string" ? acc.backpack : "#EF4444";
+      VB.celBox(ctx, -98, 2, 196, 152, 28, bpColor, 6, 0.22);
       VB.celBox(ctx, -92, 34, 184, 48, 16, "#2563EB", 5, 0.18);
     }
 
-    // Pernas
+    // Pernas com ciclo dinâmico de corrida/caminhada/salto
     const shoeColor = goldenShoes ? "#FFD426" : "#231F2C";
     if (pose === "sit") {
-      // Sentado no pufe rosa com pernas abertas e tênis vermelhos/dourados
       ctx.save();
       ctx.rotate(-0.35);
       VB.celBox(ctx, -115, 130, 88, 48, 20, "#2460B8", 6, 0.2);
@@ -374,56 +896,46 @@ window.VB = window.VB || {};
       VB.celBox(ctx, 98, 118, 42, 68, 20, goldenShoes ? "#FFD426" : "#E64855", 6, 0.2);
       ctx.restore();
     } else {
-      const runCycle = goldenShoes ? Math.sin(t * 18) * 18 : 0;
-      VB.celBox(ctx, -64, 155 + runCycle * 0.4, 56, 95, 18, "#2460B8", 6, 0.25);
-      VB.celBox(ctx, 8, 155 - runCycle * 0.4, 56, 95, 18, "#2460B8", 6, 0.25);
-      VB.celBox(ctx, -74, 228 + runCycle * 0.4, 68, 36, 16, shoeColor, 6, 0.2);
-      VB.celBox(ctx, 6, 228 - runCycle * 0.4, 68, 36, 16, shoeColor, 6, 0.2);
-      if (goldenShoes && pose !== "closeup") {
+      const legCyc = st.legSwing !== 0 ? st.legSwing : (goldenShoes ? Math.sin(t * 18) * 18 : 0);
+      VB.celBox(ctx, -64 + legCyc * 0.25, 155 + legCyc * 0.4 + st.legLiftL, 56, 95, 18, "#2460B8", 6, 0.25);
+      VB.celBox(ctx, 8 - legCyc * 0.25, 155 - legCyc * 0.4 + st.legLiftR, 56, 95, 18, "#2460B8", 6, 0.25);
+      VB.celBox(ctx, -74 + legCyc * 0.35, 228 + legCyc * 0.4 + st.legLiftL, 68, 36, 16, shoeColor, 6, 0.2);
+      VB.celBox(ctx, 6 - legCyc * 0.35, 228 - legCyc * 0.4 + st.legLiftR, 68, 36, 16, shoeColor, 6, 0.2);
+      if (goldenShoes && !st.isCloseup) {
         drawLightningBolt(ctx, -92, 236 + Math.sin(t * 16) * 6, 0.52);
         drawLightningBolt(ctx, 92, 236 - Math.sin(t * 16) * 6, 0.52);
       }
     }
 
-    // Braços (moletom ciano/roxo original PoxaRique!)
-    const wave = Math.sin(t * 10) * 0.12;
-    if (pose === "cheer") {
-      [-1, 1].forEach((dir) => {
-        ctx.save();
-        ctx.translate(dir * 82, 32);
-        ctx.rotate(dir * -2.4 + wave * dir);
-        VB.celBox(ctx, -24, 0, 48, 110, 22, "#FAD4B0", 6, 0.22);
-        VB.celBox(ctx, -26, -10, 52, 52, 22, "#06B6D4", 6, 0.22);
-        ctx.restore();
-      });
+    // Braços articulados pelo estado físico
+    [-1, 1].forEach((dir) => {
+      ctx.save();
+      ctx.translate(dir * 86, 26);
+      ctx.rotate(dir === -1 ? st.armRotL : st.armRotR);
+      VB.celBox(ctx, -24, 24, 48, 96, 22, "#FAD4B0", 6, 0.22);
+      VB.celBox(ctx, -28, -4, 56, 56, 24, "#06B6D4", 6, 0.22);
+      ctx.restore();
+    });
+
+    // Tronco moletom ciano + avental opcional
+    VB.celBox(ctx, -76, 8, 152, 164, 30, "#06B6D4", 6, 0.24);
+    if (acc.apron) {
+      VB.celBox(ctx, -60, 28, 120, 138, 20, "#FEF3C7", 5.5, 0.18);
     } else {
-      [-1, 1].forEach((dir) => {
-        ctx.save();
-        ctx.translate(dir * 86, 26);
-        ctx.rotate(dir * 0.22 + wave * dir);
-        VB.celBox(ctx, -24, 28, 48, 96, 22, "#FAD4B0", 6, 0.22);
-        VB.celBox(ctx, -28, -4, 56, 58, 24, "#06B6D4", 6, 0.22);
-        ctx.restore();
-      });
+      drawLightningBolt(ctx, 0, 82, 1.15);
     }
 
-    // Tronco moletom ciano + raio dourado original
-    VB.celBox(ctx, -76, 8, 152, 164, 30, "#06B6D4", 6, 0.24);
-    drawLightningBolt(ctx, 0, 82, 1.15);
-
-    // Cabeça
+    // Cabeça com inclinação orgânica
     ctx.save();
     ctx.translate(0, -105);
+    ctx.rotate(st.headRot);
 
-    // Fone gamer roxo nas laterais da cabeça
     [-108, 108].forEach((hx) => {
       VB.celBox(ctx, hx - 16, -34, 32, 68, 14, "#7C3AED", 5.5, 0.2);
     });
 
-    // Rosto quadrado arredondado
     VB.celBox(ctx, -102, -88, 204, 186, 44, "#FAD4B0", 6, 0.24);
 
-    // Cabelo espetado escuro + mecha ciano original (sem boné copiado!)
     ctx.save();
     ctx.beginPath();
     ctx.moveTo(-108, -32);
@@ -442,35 +954,33 @@ window.VB = window.VB || {};
     ctx.lineWidth = 6;
     ctx.strokeStyle = OUTLINE;
     ctx.stroke();
-
-    // Mecha ciano estilizada na franja
     VB.celBox(ctx, -28, -94, 58, 26, 12, "#22D3EE", 4.5, 0.2);
     ctx.restore();
 
-    // Expressão facial
-    drawFace(ctx, expr, false, t);
+    drawFace(ctx, expr, false, t, st);
+    VB.drawHeadAccessories(ctx, acc, t);
     ctx.restore();
 
     if (holdingTablet) {
       VB.drawTablet(ctx, 0, 96, 1.0);
     }
-
     if (breadBag) {
-      // Sacola kraft recheada de pães de queijo/baguetes
       VB.celBox(ctx, 56, 48, 76, 92, 14, "#D97706", 5.5, 0.22);
       VB.celBox(ctx, 66, 24, 26, 42, 12, "#FBBF24", 5, 0.18);
       VB.celBox(ctx, 94, 28, 26, 38, 12, "#F59E0B", 5, 0.18);
     }
+    VB.drawHandAccessories(ctx, acc, t);
+    ctx.restore();
 
     if (typeof hp === "number") {
       const barY = nametag ? -308 : -262;
       VB.celBox(ctx, -96, barY, 192, 28, 12, "#16182D", 5, 0);
-      const fillW = Math.max(14, Math.round(180 * Math.max(0, Math.min(100, hp)) / 100));
+      const fillW = Math.max(14, Math.round((180 * Math.max(0, Math.min(100, hp))) / 100));
       VB.celBox(ctx, -90, barY + 4, fillW, 20, 8, hp <= 20 ? "#EF4444" : "#22C55E", 3, 0);
     }
 
     if (nametag) {
-      VB.drawNametag(ctx, 0, -258, nametag, "#FFD426");
+      VB.drawNametag(ctx, 0, acc.crown ? -308 : -258, nametag, "#FFD426");
     }
 
     ctx.restore();
@@ -478,79 +988,77 @@ window.VB = window.VB || {};
 
   // Personagem Mãe ("Mãe")
   VB.drawMom = function (ctx, opts = {}) {
+    const st = VB.computeAnimState(opts, "mae");
+    const acc = normalizeAccessories(opts);
+    const rawExpr = st.forcedExpr || opts.expr || opts.expression || "scream";
+    const expr = rawExpr === "shock" ? "shocked_extreme" : rawExpr;
     const {
       x = 540,
       y = 960,
       scale = 1,
-      expr = "scream",
-      pose = "stand",
       holdingTablet = false,
       crown = false,
       t = 0,
       nametag = "",
+      flip = false,
     } = opts;
 
     ctx.save();
-    ctx.translate(x, y);
-    ctx.scale(scale, scale);
+    VB._recordTarget("mae", opts, st);
+    ctx.translate(x + st.offsetX, y + st.offsetY);
+    ctx.scale((flip ? -scale : scale) * st.scaleX, scale * st.scaleY);
 
-    if (pose !== "closeup" && pose !== "fall") {
+    if (!st.isCloseup && st.state !== "fall") {
       ctx.beginPath();
-      ctx.ellipse(0, 272, 95, 22, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 272 - st.offsetY * 0.65, 95, 22, 0, 0, Math.PI * 2);
       ctx.fillStyle = "rgba(0,0,0,0.22)";
       ctx.fill();
     }
 
-    // Pernas roxas + sapatos escuros
-    VB.celBox(ctx, -62, 152, 56, 102, 16, "#5A4688", 6, 0.25);
-    VB.celBox(ctx, 6, 152, 56, 102, 16, "#5A4688", 6, 0.25);
-    VB.celBox(ctx, -70, 232, 66, 36, 16, "#231F2C", 6, 0.2);
-    VB.celBox(ctx, 4, 232, 66, 36, 16, "#231F2C", 6, 0.2);
+    VB.drawStateParticles(ctx, st, t);
+    ctx.save();
+    ctx.rotate(st.torsoTilt);
 
-    // Braços com manga coral/vermelha original
-    const wave = Math.sin(t * 12) * 0.14;
-    if (pose === "cheer" || pose === "fall") {
-      [-1, 1].forEach((dir) => {
-        ctx.save();
-        ctx.translate(dir * 84, 30);
-        ctx.rotate(dir * -2.35 + wave * dir);
-        VB.celBox(ctx, -24, 0, 48, 104, 22, "#F97316", 6, 0.22);
-        VB.celBox(ctx, -22, 86, 44, 38, 18, "#FAD4B0", 5.5, 0.2);
-        ctx.restore();
-      });
+    if (acc.backpack) {
+      VB.celBox(ctx, -96, 4, 192, 148, 26, "#EC4899", 6, 0.22);
+    }
+
+    const legCyc = st.legSwing;
+    VB.celBox(ctx, -62 + legCyc * 0.25, 152 + legCyc * 0.35 + st.legLiftL, 56, 102, 16, "#5A4688", 6, 0.25);
+    VB.celBox(ctx, 6 - legCyc * 0.25, 152 - legCyc * 0.35 + st.legLiftR, 56, 102, 16, "#5A4688", 6, 0.25);
+    VB.celBox(ctx, -70 + legCyc * 0.3, 232 + legCyc * 0.35 + st.legLiftL, 66, 36, 16, "#231F2C", 6, 0.2);
+    VB.celBox(ctx, 4 - legCyc * 0.3, 232 - legCyc * 0.35 + st.legLiftR, 66, 36, 16, "#231F2C", 6, 0.2);
+
+    [-1, 1].forEach((dir) => {
+      ctx.save();
+      ctx.translate(dir * 88, 26);
+      ctx.rotate(dir === -1 ? st.armRotL : st.armRotR);
+      VB.celBox(ctx, -24, 0, 48, 106, 22, "#F97316", 6, 0.22);
+      VB.celBox(ctx, -22, 88, 44, 38, 18, "#FAD4B0", 5.5, 0.2);
+      ctx.restore();
+    });
+
+    VB.celBox(ctx, -76, 8, 152, 162, 26, "#F8FAFC", 6, 0.2);
+    VB.celBox(ctx, -76, 8, 52, 162, 20, "#F97316", 6, 0.18);
+    VB.celBox(ctx, 24, 8, 52, 162, 20, "#F97316", 6, 0.28);
+    if (acc.apron) {
+      VB.celBox(ctx, -58, 28, 116, 136, 20, "#FEF3C7", 5.5, 0.18);
     } else {
-      [-1, 1].forEach((dir) => {
-        ctx.save();
-        ctx.translate(dir * 90, 24);
-        ctx.rotate(dir * 0.14 + wave * dir);
-        VB.celBox(ctx, -25, 0, 50, 112, 22, "#F97316", 6, 0.22);
-        VB.celBox(ctx, -23, 94, 46, 40, 18, "#FAD4B0", 5.5, 0.2);
-        ctx.restore();
+      [52, 96].forEach((by) => {
+        ctx.beginPath();
+        ctx.arc(-38, by, 6, 0, Math.PI * 2);
+        ctx.fillStyle = "#FFF5CC";
+        ctx.fill();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = OUTLINE;
+        ctx.stroke();
       });
     }
 
-    // Tronco: blusa branca interna + jaqueta coral/laranja aberta com botões
-    VB.celBox(ctx, -76, 8, 152, 162, 26, "#F8FAFC", 6, 0.2);
-    // Abas esquerda e direita da jaqueta
-    VB.celBox(ctx, -76, 8, 52, 162, 20, "#F97316", 6, 0.18);
-    VB.celBox(ctx, 24, 8, 52, 162, 20, "#F97316", 6, 0.28);
-    // Botões brancos no cardigã
-    [-42, -42].forEach((_, idx) => {
-      const by = idx === 0 ? 52 : 96;
-      ctx.beginPath();
-      ctx.arc(-38, by, 6, 0, Math.PI * 2);
-      ctx.fillStyle = "#FFF5CC";
-      ctx.fill();
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = OUTLINE;
-      ctx.stroke();
-    });
-
-    // Cabeça da Mãe
     ctx.save();
     ctx.translate(0, -106);
+    ctx.rotate(st.headRot);
 
-    // Rabo de cavalo lateral alto + elástico amarelo
     ctx.save();
     ctx.beginPath();
     ctx.moveTo(82, -78);
@@ -571,7 +1079,6 @@ window.VB = window.VB || {};
     ctx.stroke();
     ctx.restore();
 
-    // Brincos de argola dourados
     [-104, 104].forEach((ex) => {
       ctx.beginPath();
       ctx.arc(ex, 26, 22, 0, Math.PI * 2);
@@ -580,10 +1087,8 @@ window.VB = window.VB || {};
       ctx.stroke();
     });
 
-    // Rosto
     VB.celBox(ctx, -102, -88, 204, 186, 44, "#FAD4B0", 6, 0.24);
 
-    // Cabelo castanho com franja dividida
     ctx.save();
     ctx.beginPath();
     ctx.moveTo(-108, -18);
@@ -608,36 +1113,18 @@ window.VB = window.VB || {};
     ctx.stroke();
     ctx.restore();
 
-    // Coroa Admin dourada (opcional para cena final)
-    if (crown) {
-      ctx.save();
-      ctx.translate(0, -124);
-      ctx.beginPath();
-      ctx.moveTo(-64, 18);
-      ctx.lineTo(-74, -36);
-      ctx.lineTo(-32, -8);
-      ctx.lineTo(0, -48);
-      ctx.lineTo(32, -8);
-      ctx.lineTo(74, -36);
-      ctx.lineTo(64, 18);
-      ctx.closePath();
-      ctx.fillStyle = "#FFD426";
-      ctx.fill();
-      ctx.lineWidth = 6;
-      ctx.strokeStyle = OUTLINE;
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    drawFace(ctx, expr, true, t);
+    drawFace(ctx, expr, true, t, st);
+    VB.drawHeadAccessories(ctx, Object.assign({}, acc, { glasses: false, crown: crown || acc.crown }), t);
     ctx.restore();
 
     if (holdingTablet) {
       VB.drawTablet(ctx, -38, 108, 0.95);
     }
+    VB.drawHandAccessories(ctx, acc, t);
+    ctx.restore();
 
     if (nametag) {
-      VB.drawNametag(ctx, 0, crown ? -290 : -258, nametag, "#FF66B2");
+      VB.drawNametag(ctx, 0, crown || acc.crown ? -290 : -258, nametag, "#FF66B2");
     }
 
     ctx.restore();
@@ -645,10 +1132,15 @@ window.VB = window.VB || {};
 
   VB.drawNametag = function (ctx, x, y, text, color = "#FFD426") {
     ctx.save();
+    ctx.translate(x, y);
+    // Garante que nametag NUNCA fique espelhada mesmo quando o personagem usa flip: true!
+    if (ctx.getTransform().a < 0) {
+      ctx.scale(-1, 1);
+    }
     ctx.font = "900 28px 'Fredoka', 'Arial Black', sans-serif";
     const tw = ctx.measureText(text).width + 34;
     ctx.beginPath();
-    ctx.roundRect(x - tw / 2, y - 24, tw, 44, 14);
+    ctx.roundRect(-tw / 2, -24, tw, 44, 14);
     ctx.fillStyle = "rgba(20, 18, 36, 0.85)";
     ctx.fill();
     ctx.lineWidth = 3;
@@ -658,53 +1150,54 @@ window.VB = window.VB || {};
     ctx.fillStyle = color;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(text, x, y - 1);
+    ctx.fillText(text, 0, -1);
     ctx.restore();
   };
 
-  // Personagem Cachorro Caramelo Brasileiro em bloco (reutilizável)
+  // Personagem Cachorro Caramelo Brasileiro em bloco
   VB.drawCaramelo = function (ctx, opts = {}) {
+    const st = VB.computeAnimState(opts, "caramelo");
+    const acc = normalizeAccessories(opts);
     const {
       x = 540,
       y = 1050,
       scale = 1,
       crown = false,
       sunglasses = false,
-      pose = "stand",
       t = 0,
       nametag = "",
+      flip = false,
     } = opts;
 
     ctx.save();
-    ctx.translate(x, y);
-    ctx.scale(scale, scale);
+    VB._recordTarget("caramelo", opts, st);
+    ctx.translate(x + st.offsetX, y + st.offsetY);
+    ctx.scale((flip ? -scale : scale) * st.scaleX, scale * st.scaleY);
 
-    if (pose !== "closeup") {
+    if (!st.isCloseup && st.state !== "fall") {
       ctx.beginPath();
-      ctx.ellipse(0, 175, 115, 22, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 175 - st.offsetY * 0.65, 115, 22, 0, 0, Math.PI * 2);
       ctx.fillStyle = "rgba(0,0,0,0.22)";
       ctx.fill();
     }
 
-    // Rabinho abanando
+    VB.drawStateParticles(ctx, st, t);
+
     ctx.save();
     ctx.translate(98, 42);
-    ctx.rotate(Math.sin(t * 18) * 0.45 + 0.4);
+    ctx.rotate(Math.sin(t * 20) * 0.48 + 0.4);
     VB.celBox(ctx, -12, -58, 28, 66, 14, "#D98629", 5.5, 0.25);
     ctx.restore();
 
-    // Patinhas traseiras e dianteiras
-    const bounce = pose === "cheer" ? Math.abs(Math.sin(t * 12)) * -14 : 0;
-    [-72, -22, 26, 74].forEach((lx) => {
-      VB.celBox(ctx, lx - 20, 96 + bounce, 40, 76, 14, "#E59A3C", 5.5, 0.25);
-      VB.celBox(ctx, lx - 22, 152 + bounce, 44, 24, 10, "#8C4A1C", 5, 0.2);
+    [-72, -22, 26, 74].forEach((lx, idx) => {
+      const legOff = (idx % 2 === 0 ? 1 : -1) * st.legSwing * 0.45;
+      VB.celBox(ctx, lx - 20 + legOff * 0.4, 96 + legOff * 0.5, 40, 76, 14, "#E59A3C", 5.5, 0.25);
+      VB.celBox(ctx, lx - 22 + legOff * 0.4, 152 + legOff * 0.5, 44, 24, 10, "#8C4A1C", 5, 0.2);
     });
 
-    // Corpo em bloco caramelo + barriga creme
     VB.celBox(ctx, -98, 6, 196, 108, 28, "#E59A3C", 6, 0.24);
     VB.celBox(ctx, -56, 36, 112, 68, 20, "#FDE0B6", 4, 0);
 
-    // Coleira vermelha com plaquinha dourada
     VB.celBox(ctx, -82, -8, 164, 24, 10, "#EE2B3B", 5.5, 0.2);
     ctx.beginPath();
     ctx.arc(0, 18, 14, 0, Math.PI * 2);
@@ -714,11 +1207,10 @@ window.VB = window.VB || {};
     ctx.strokeStyle = OUTLINE;
     ctx.stroke();
 
-    // Cabeça quadrada arredondada do Caramelo
     ctx.save();
     ctx.translate(0, -96);
+    ctx.rotate(st.headRot);
 
-    // Orelhas caídas marrons
     [-1, 1].forEach((dir) => {
       ctx.save();
       ctx.translate(dir * 94, -34);
@@ -729,8 +1221,7 @@ window.VB = window.VB || {};
 
     VB.celBox(ctx, -94, -82, 188, 166, 40, "#E59A3C", 6, 0.24);
 
-    // Olhos expressivos ou óculos escuros de patrão
-    if (sunglasses) {
+    if (sunglasses || acc.glasses === "sunglasses" || acc.glasses === "cool") {
       VB.celBox(ctx, -82, -32, 72, 42, 10, "#111827", 5.5, 0);
       VB.celBox(ctx, 10, -32, 72, 42, 10, "#111827", 5.5, 0);
       ctx.lineWidth = 6;
@@ -739,7 +1230,6 @@ window.VB = window.VB || {};
       ctx.moveTo(-10, -14);
       ctx.lineTo(10, -14);
       ctx.stroke();
-      // Brilho branco na lente
       ctx.strokeStyle = "rgba(255,255,255,0.65)";
       ctx.lineWidth = 5;
       ctx.beginPath();
@@ -748,6 +1238,15 @@ window.VB = window.VB || {};
       ctx.moveTo(26, -22);
       ctx.lineTo(44, -4);
       ctx.stroke();
+    } else if (st.isBlinking) {
+      [-42, 42].forEach((ox) => {
+        ctx.lineWidth = 6;
+        ctx.strokeStyle = OUTLINE;
+        ctx.beginPath();
+        ctx.moveTo(ox - 18, -14);
+        ctx.quadraticCurveTo(ox, -6, ox + 18, -14);
+        ctx.stroke();
+      });
     } else {
       [-42, 42].forEach((ox) => {
         ctx.beginPath();
@@ -770,15 +1269,13 @@ window.VB = window.VB || {};
       });
     }
 
-    // Focinho bege + nariz preto brilhante + linguinha rosa
     VB.celBox(ctx, -48, 12, 96, 58, 24, "#FDE0B6", 5.5, 0.18);
     VB.celBox(ctx, -20, 16, 40, 24, 12, "#1E1B2E", 4.5, 0);
 
-    const pant = 22 + Math.abs(Math.sin(t * 14)) * 12;
+    const pant = 20 + (st.speech.speaking ? st.speech.open * 22 : Math.abs(Math.sin(t * 14)) * 12);
     VB.celBox(ctx, -16, 46, 32, pant, 14, "#FF6B97", 4.5, 0);
 
-    // Coroa Admin dourada
-    if (crown) {
+    if (crown || acc.crown) {
       ctx.save();
       ctx.translate(0, -104);
       ctx.beginPath();
@@ -801,13 +1298,13 @@ window.VB = window.VB || {};
     ctx.restore();
 
     if (nametag) {
-      VB.drawNametag(ctx, 0, crown ? -246 : -210, nametag, "#FFD426");
+      VB.drawNametag(ctx, 0, crown || acc.crown ? -246 : -210, nametag, "#FFD426");
     }
 
     ctx.restore();
   };
 
-  // Marca d'água oficial do criador (PoxaRique!)
+  // Marca d'água oficial discreta e segura (fora da UI lateral/inferior do YouTube Shorts)
   VB.drawWatermark = function (ctx, W, H, label = "PoxaRique!", isLandscape = false) {
     if (!label) return;
     ctx.save();
@@ -854,38 +1351,41 @@ window.VB = window.VB || {};
    * vestido lilás florido + avental creme, panela fumegante / colher de pau / nota de R$50.
    */
   VB.drawVovo = function (ctx, opts = {}) {
-    const rawExpr = opts.expr || opts.expression || "happy";
+    const st = VB.computeAnimState(opts, "vo");
+    const acc = normalizeAccessories(opts);
+    const rawExpr = st.forcedExpr || opts.expr || opts.expression || "happy";
     const expr = rawExpr === "shock" ? "shocked_extreme" : rawExpr;
     const {
       x = 540,
       y = 960,
       scale = 1,
-      pose = "stand",
       holdingPot = false,
       woodenSpoon = false,
       moneyNote = false,
       crown = false,
       t = 0,
       nametag = "",
+      flip = false,
     } = opts;
+    VB._recordTarget("vo", opts, st);
 
-    const bob = Math.sin(t * 4.2) * 4;
     ctx.save();
-    ctx.translate(x, y + bob);
-    ctx.scale(scale, scale);
+    ctx.translate(x + st.offsetX, y + st.offsetY);
+    ctx.scale((flip ? -scale : scale) * st.scaleX, scale * st.scaleY);
 
-    if (pose !== "closeup") {
+    if (!st.isCloseup && st.state !== "fall") {
       ctx.beginPath();
-      ctx.ellipse(0, 268, 98, 22, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 268 - st.offsetY * 0.65, 98, 22, 0, 0, Math.PI * 2);
       ctx.fillStyle = "rgba(0,0,0,0.22)";
       ctx.fill();
     }
+    VB.drawStateParticles(ctx, st, t);
 
-    // Pernas + chinelinho branco/azul
-    VB.celBox(ctx, -60, 152, 54, 96, 16, "#FAD4B0", 6, 0.22);
-    VB.celBox(ctx, 6, 152, 54, 96, 16, "#FAD4B0", 6, 0.22);
-    VB.celBox(ctx, -70, 232, 66, 30, 14, "#F8FAFC", 6, 0.18);
-    VB.celBox(ctx, 4, 232, 66, 30, 14, "#F8FAFC", 6, 0.18);
+    const legCyc = st.legSwing;
+    VB.celBox(ctx, -60 + legCyc * 0.2, 152 + legCyc * 0.3 + st.legLiftL, 54, 96, 16, "#FAD4B0", 6, 0.22);
+    VB.celBox(ctx, 6 - legCyc * 0.2, 152 - legCyc * 0.3 + st.legLiftR, 54, 96, 16, "#FAD4B0", 6, 0.22);
+    VB.celBox(ctx, -70 + legCyc * 0.25, 232 + legCyc * 0.3 + st.legLiftL, 66, 30, 14, "#F8FAFC", 6, 0.18);
+    VB.celBox(ctx, 4 - legCyc * 0.25, 232 - legCyc * 0.3 + st.legLiftR, 66, 30, 14, "#F8FAFC", 6, 0.18);
     ctx.lineWidth = 5;
     ctx.strokeStyle = "#0284C7";
     [-37, 37].forEach((cx) => {
@@ -896,12 +1396,10 @@ window.VB = window.VB || {};
       ctx.stroke();
     });
 
-    // Braços acolhedores
-    const wave = Math.sin(t * 9) * 0.1;
     [-1, 1].forEach((dir) => {
       ctx.save();
       ctx.translate(dir * 88, 26);
-      ctx.rotate(pose === "cheer" ? dir * -2.2 + wave * dir : dir * 0.18 + wave * dir);
+      ctx.rotate(dir === -1 ? st.armRotL : st.armRotR);
       VB.celBox(ctx, -24, 0, 48, 52, 22, "#9333EA", 6, 0.22);
       VB.celBox(ctx, -22, 38, 44, 78, 20, "#FAD4B0", 6, 0.22);
       ctx.restore();
@@ -1030,7 +1528,7 @@ window.VB = window.VB || {};
     ctx.restore();
 
     // Coroa Admin opcional
-    if (crown) {
+    if (crown || acc.crown) {
       ctx.save();
       ctx.translate(0, -152);
       ctx.beginPath();
@@ -1051,7 +1549,8 @@ window.VB = window.VB || {};
     }
 
     // Expressão facial SEM óculos da Mãe (isMom = false!)
-    drawFace(ctx, expr, false, t);
+    drawFace(ctx, expr, false, t, st);
+    VB.drawHandAccessories(ctx, acc, t);
 
     // Óculos redondos dourados exclusivos da Vó + cordinha lateral
     [-48, 48].forEach((gx) => {
@@ -1076,7 +1575,7 @@ window.VB = window.VB || {};
     ctx.restore();
 
     if (nametag) {
-      VB.drawNametag(ctx, 0, crown ? -328 : -296, nametag, "#FFD426");
+      VB.drawNametag(ctx, 0, crown || acc.crown ? -328 : -296, nametag, "#FFD426");
     }
 
     ctx.restore();
@@ -1616,5 +2115,217 @@ window.VB = window.VB || {};
     }
 
     ctx.restore();
+  };
+
+  // Alias VB.drawVo -> VB.drawVovo
+  VB.drawVo = VB.drawVovo;
+
+  // =========================================================================
+  // PROFESSOR / CIENTISTA DA ESCOLA (jaleco/terno, óculos, prancheta e régua)
+  // =========================================================================
+  VB.drawProfessor = function (ctx, opts = {}) {
+    const st = VB.computeAnimState(opts, "professor");
+    const acc = normalizeAccessories(opts);
+    const rawExpr = st.forcedExpr || opts.expr || opts.expression || "angry";
+    const expr = rawExpr === "shock" ? "shocked_extreme" : rawExpr;
+    const {
+      x = 540,
+      y = 960,
+      scale = 1,
+      clipboard = true,
+      ruler = true,
+      t = 0,
+      nametag = "",
+      flip = false,
+    } = opts;
+
+    ctx.save();
+    ctx.translate(x + st.offsetX, y + st.offsetY);
+    ctx.scale((flip ? -scale : scale) * st.scaleX, scale * st.scaleY);
+
+    if (!st.isCloseup && st.state !== "fall") {
+      ctx.beginPath();
+      ctx.ellipse(0, 268 - st.offsetY * 0.65, 96, 22, 0, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(0,0,0,0.22)";
+      ctx.fill();
+    }
+
+    VB.drawStateParticles(ctx, st, t);
+    ctx.save();
+    ctx.rotate(st.torsoTilt);
+
+    const legCyc = st.legSwing;
+    VB.celBox(ctx, -60 + legCyc * 0.25, 152 + legCyc * 0.35 + st.legLiftL, 54, 100, 16, "#334155", 6, 0.24);
+    VB.celBox(ctx, 6 - legCyc * 0.25, 152 - legCyc * 0.35 + st.legLiftR, 54, 100, 16, "#334155", 6, 0.24);
+    VB.celBox(ctx, -68 + legCyc * 0.3, 232 + legCyc * 0.35 + st.legLiftL, 64, 34, 14, "#1E1B4B", 6, 0.2);
+    VB.celBox(ctx, 4 - legCyc * 0.3, 232 - legCyc * 0.35 + st.legLiftR, 64, 34, 14, "#1E1B4B", 6, 0.2);
+
+    [-1, 1].forEach((dir) => {
+      ctx.save();
+      ctx.translate(dir * 88, 24);
+      ctx.rotate(dir === -1 ? st.armRotL : st.armRotR);
+      VB.celBox(ctx, -24, 0, 48, 96, 20, "#F8FAFC", 6, 0.2);
+      VB.celBox(ctx, -22, 84, 44, 36, 16, "#FAD4B0", 5.5, 0.2);
+      ctx.restore();
+    });
+
+    // Camisa azul + gravata verde + jaleco branco aberto
+    VB.celBox(ctx, -78, 8, 156, 164, 28, "#38BDF8", 6, 0.2);
+    VB.celBox(ctx, -12, 16, 24, 92, 8, "#15803D", 4.5, 0.2);
+    VB.celBox(ctx, -78, 8, 52, 164, 20, "#F8FAFC", 6, 0.18);
+    VB.celBox(ctx, 26, 8, 52, 164, 20, "#F8FAFC", 6, 0.25);
+
+    if (clipboard && !acc.item_in_hand) {
+      VB.drawHandAccessories(ctx, { item_in_hand: "clipboard" }, t);
+    }
+    if (ruler && !acc.item_in_hand) {
+      VB.drawHandAccessories(ctx, { item_in_hand: "ruler" }, t);
+    }
+    VB.drawHandAccessories(ctx, acc, t);
+
+    ctx.save();
+    ctx.translate(0, -106);
+    ctx.rotate(st.headRot);
+
+    VB.celBox(ctx, -102, -88, 204, 186, 44, "#FAD4B0", 6, 0.24);
+
+    // Cabelo repartido de professor com têmporas grisalhas
+    VB.celBox(ctx, -106, -112, 212, 54, 24, "#475569", 6, 0.22);
+    VB.celBox(ctx, -108, -74, 34, 46, 12, "#94A3B8", 5, 0);
+    VB.celBox(ctx, 74, -74, 34, 46, 12, "#94A3B8", 5, 0);
+
+    drawFace(ctx, expr, false, t, st);
+    VB.drawHeadAccessories(ctx, Object.assign({ glasses: "square" }, acc), t);
+    ctx.restore();
+    ctx.restore();
+
+    if (nametag) {
+      VB.drawNametag(ctx, 0, -278, nametag, "#38BDF8");
+    }
+
+    ctx.restore();
+  };
+
+  // =========================================================================
+  // NPC / AMIGO MODULAR (customizável por cor, cabelo e acessórios JSON)
+  // =========================================================================
+  VB.drawNpc = function (ctx, opts = {}) {
+    const role = opts.role || "amigo";
+    const st = VB.computeAnimState(opts, role);
+    const acc = normalizeAccessories(opts);
+    const rawExpr = st.forcedExpr || opts.expr || opts.expression || "happy";
+    const expr = rawExpr === "shock" ? "shocked_extreme" : rawExpr;
+    const {
+      x = 540,
+      y = 960,
+      scale = 1,
+      shirtColor = "#22C55E",
+      pantsColor = "#1E293B",
+      hairColor = "#78350F",
+      skinColor = "#F1C27D",
+      t = 0,
+      nametag = "",
+      flip = false,
+      hp = null,
+    } = opts;
+
+    ctx.save();
+    ctx.translate(x + st.offsetX, y + st.offsetY);
+    ctx.scale((flip ? -scale : scale) * st.scaleX, scale * st.scaleY);
+
+    if (!st.isCloseup && st.state !== "fall") {
+      ctx.beginPath();
+      ctx.ellipse(0, 268 - st.offsetY * 0.65, 95, 22, 0, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(0,0,0,0.22)";
+      ctx.fill();
+    }
+
+    VB.drawStateParticles(ctx, st, t);
+    ctx.save();
+    ctx.rotate(st.torsoTilt);
+
+    if (acc.backpack) {
+      const bpC = typeof acc.backpack === "string" ? acc.backpack : "#F97316";
+      VB.celBox(ctx, -96, 4, 192, 148, 26, bpC, 6, 0.22);
+    }
+
+    const legCyc = st.legSwing;
+    VB.celBox(ctx, -60 + legCyc * 0.25, 152 + legCyc * 0.35 + st.legLiftL, 54, 98, 16, pantsColor, 6, 0.24);
+    VB.celBox(ctx, 6 - legCyc * 0.25, 152 - legCyc * 0.35 + st.legLiftR, 54, 98, 16, pantsColor, 6, 0.24);
+    VB.celBox(ctx, -68 + legCyc * 0.3, 232 + legCyc * 0.35 + st.legLiftL, 64, 34, 14, "#111827", 6, 0.2);
+    VB.celBox(ctx, 4 - legCyc * 0.3, 232 - legCyc * 0.35 + st.legLiftR, 64, 34, 14, "#111827", 6, 0.2);
+
+    [-1, 1].forEach((dir) => {
+      ctx.save();
+      ctx.translate(dir * 86, 24);
+      ctx.rotate(dir === -1 ? st.armRotL : st.armRotR);
+      VB.celBox(ctx, -24, 24, 48, 92, 20, skinColor, 6, 0.22);
+      VB.celBox(ctx, -26, -4, 52, 54, 22, shirtColor, 6, 0.22);
+      ctx.restore();
+    });
+
+    VB.celBox(ctx, -78, 8, 156, 164, 28, shirtColor, 6, 0.24);
+    if (acc.apron) {
+      VB.celBox(ctx, -60, 28, 120, 138, 20, "#FEF3C7", 5.5, 0.18);
+    } else {
+      VB.celBox(ctx, -38, 52, 76, 26, 10, "#FFFFFF", 4.5, 0);
+    }
+
+    ctx.save();
+    ctx.translate(0, -106);
+    ctx.rotate(st.headRot);
+
+    VB.celBox(ctx, -102, -88, 204, 186, 44, skinColor, 6, 0.24);
+
+    // Cabelo cacheado/ondulado estiloso em blocos
+    VB.celBox(ctx, -108, -118, 216, 62, 28, hairColor, 6, 0.22);
+    [-68, 0, 68].forEach((cx) => {
+      ctx.beginPath();
+      ctx.arc(cx, -114, 28, 0, Math.PI * 2);
+      ctx.fillStyle = hairColor;
+      ctx.fill();
+      ctx.lineWidth = 5.5;
+      ctx.strokeStyle = OUTLINE;
+      ctx.stroke();
+    });
+
+    drawFace(ctx, expr, false, t, st);
+    VB.drawHeadAccessories(ctx, acc, t);
+    ctx.restore();
+
+    VB.drawHandAccessories(ctx, acc, t);
+    ctx.restore();
+
+    if (typeof hp === "number") {
+      const barY = nametag ? -308 : -262;
+      VB.celBox(ctx, -96, barY, 192, 28, 12, "#16182D", 5, 0);
+      const fillW = Math.max(14, Math.round((180 * Math.max(0, Math.min(100, hp))) / 100));
+      VB.celBox(ctx, -90, barY + 4, fillW, 20, 8, hp <= 20 ? "#EF4444" : "#22C55E", 3, 0);
+    }
+
+    if (nametag) {
+      VB.drawNametag(ctx, 0, acc.crown ? -296 : -264, nametag, "#5CE65C");
+    }
+
+    ctx.restore();
+  };
+
+  VB.drawAmigo = VB.drawNpc;
+
+  // Despachante universal de elenco (usado por cenas declarativas e presets)
+  VB.drawCharacter = function (ctx, tipo, opts = {}) {
+    const key = String(tipo || "menino").toLowerCase();
+    VB._recordTarget(key, opts, null);
+    if (key === "menino" || key === "boy") return VB.drawBoy(ctx, opts);
+    if (key === "mae" || key === "mom") return VB.drawMom(ctx, opts);
+    if (key === "caramelo" || key === "dog") return VB.drawCaramelo(ctx, opts);
+    if (key === "vo" || key === "vovo") return VB.drawVovo(ctx, opts);
+    if (key === "professor" || key === "prof") return VB.drawProfessor(ctx, opts);
+    if (key === "diretora") return VB.drawDiretora(ctx, opts);
+    if (key === "padeiro") return VB.drawPadeiro(ctx, opts);
+    if (key === "caixa") return VB.drawCaixa(ctx, opts);
+    if (key === "motorista") return VB.drawMotorista(ctx, opts);
+    if (key === "sindica") return VB.drawSindica(ctx, opts);
+    return VB.drawNpc(ctx, Object.assign({ role: key }, opts));
   };
 })(window.VB);

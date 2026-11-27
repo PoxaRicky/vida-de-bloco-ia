@@ -2,66 +2,74 @@
 name: vida-de-bloco
 description: >-
   Produz vídeos completos para o canal Vida de Bloco (@VidadeBlocoBR) no estilo cartoon
-  2D/2.5D em blocos (Shorts 9:16 e Vídeos Longos 16:9): cria roteiros originais "E se...?",
-  desenha personagens e cenários exclusivos, sincroniza narração multi-voz + legenda palavra
-  por palavra (WordBoundary), gera thumbnails 1280x720 e 1080x1920, audita visualmente todos
-  os quadros com revisao-01 e publica no YouTube somente após aprovação do usuário.
-  Use sempre que o usuário pedir vídeos para o Vida de Bloco, histórias "E se...?" de Roblox,
-  novos lotes de Shorts/vídeos longos, thumbnails ou publicação no canal @VidadeBlocoBR.
+  2D/2.5D em blocos v2 (Shorts 9:16 e Vídeos Longos 16:9): física de estados e trajetórias
+  reais, câmera virtual dinâmica, cenários interativos, sanitizador TTS PT-BR + SFX por
+  evento com audio ducking, modo --preview rápido, thumbnails 16:9, auditoria visual com
+  revisao-01 e publicação no YouTube após aprovação do usuário.
 ---
 
-# Skill Oficial — Agente Vida de Bloco (`@VidadeBlocoBR`)
+# Skill Oficial — Agente Vida de Bloco v2 (`@VidadeBlocoBR`)
 
-Este fluxo automatiza de ponta a ponta a criação de vídeos originais de alta retenção para o canal **Vida de Bloco (`@VidadeBlocoBR`)**, mantendo 100% de fidelidade entre roteiro, vozes, personagens, cenários, HUDs e legendas.
+Este fluxo automatiza de ponta a ponta a criação de vídeos originais de alta retenção para o canal **Vida de Bloco (`@VidadeBlocoBR`)**, combinando física de animação contínua, trajetórias reais, câmera dinâmica e áudio cristalino.
 
 ## 1. Localização do Projeto & Git Sync
 - Repositório: `c:\Users\henri\Documents\POXARIQUE\vida-de-bloco-ia`
 - **Ao começar:** `git pull origin main`
-- **Ao concluir alterações de código/roteiros:** `git add assets/ scripts/ .agents/ GEMINI.md && git commit -m "..." && git push origin main` (jamais commite `client_secret.json`, `token.json`, `.env` ou `output/`).
+- **Ao concluir alterações de código/roteiros/agentes:** sincronize com GitHub (`git add`, `git commit`, `git push origin main`), nunca subindo `client_secret.json`, `token.json`, `.env` ou `output/`.
 
-## 2. Padrão de Criação Original (Proibido Reciclar Cenários Desconexos!)
-1. **Roteiro JSON (`scripts/<slug>.json`):**
-   - Formato `"short"` (`1080x1920`, 5–6 cenas rápidas, ~20–26s) ou `"long"` (`1920x1080`, capítulos com `"hud_dias"`).
-   - Sempre incluir `"marca_dagua": "PoxaRique!"` (ou `"Vida de Bloco"` se solicitado) e `"arquivo_saida": "<slug>_poxarique.mp4"`.
-   - Alternar `"voz"` de acordo com quem fala em tela:
-     - `"menino"` (`pt-BR-AntonioNeural`, jovem ágil)
-     - `"mae"` (`pt-BR-FranciscaNeural`)
-     - `"vo"` (`pt-BR-ThalitaMultilingualNeural`, grave acolhedora)
-     - `"diretora"` (`pt-BR-FranciscaNeural`, firme)
-     - `"narrador"` (`pt-BR-AntonioNeural`)
+## 2. Schema JSON v2 de Alta Retenção (`scripts/<slug>.json`)
 
-2. **Rigs de Personagens (`assets/characters/cartoon_rig.js`):**
-   - Reutilize `VB.drawBoy`, `VB.drawMom`, `VB.drawCaramelo`, `VB.drawVovo`, `VB.drawDiretora`, `VB.drawPadeiro` — e **sempre crie novos rigs `VB.draw<Personagem>`** quando o roteiro trouxer um personagem inédito!
-   - **Proporção obrigatória:** cabeça `VB.celBox(ctx, -102, -88, 204, 186, 44, "#FAD4B0", 6, 0.24)` em `translate(0, -106)`, tronco `156x164`, contorno `#1A1423` (`6px`), sombra lateral `0.24`.
-   - **Regra anti-óculos duplicados:** passe SEMPRE `isMom = false` em `drawFace(ctx, expr, false, t)` para qualquer personagem que não seja a Mãe!
+### Campos Raiz
+- `"titulo"`: Título com gancho forte `"E se...?"`.
+- `"formato"`: `"short"` (`1080x1920`, ideal `18s–35s`, 5–6 cenas) ou `"long"` (`1920x1080`).
+- `"marca_dagua"`: `"PoxaRique!"` (posicionada de forma limpa fora da UI do Shorts).
+- `"arquivo_saida"`: `"<slug>_poxarique.mp4"`.
 
-3. **Cenários Exclusivos e Zonas Seguras (`assets/scenes/environments.js`):**
-   - Cada cena do JSON deve ter seu próprio `envName` retratando fielmente o ambiente, os props e a piada visual narrada.
-   - **Mapa de Zonas Seguras (9:16 — `1080x1920`):**
-     - `Y = 54` (esquerda): Pílula da marca d'água (`VB.drawWatermark`).
-     - `Y = 180..300`: Cards de HUD estilo Roblox (`⚙ SISTEMA`, barra de HP, notificações Pix, missões). Mantenha sol, nuvens, janelas e lousas em `Y >= 305`.
-     - `Cena 0 (Hook close-up)`: 3 linhas de título em `H * 0.105`, `H * 0.175`, `H * 0.242`; pill opcional em `H * 0.30`; personagem close-up em `y: H * 0.73, scale: ~2.22` (boca livre da legenda!).
-     - `Cena Final (CTA)`: Personagens subidos em `y: H * 0.56` (pés acima da legenda!).
-     - `Y = H * 0.855` (`~1642px`): Legenda sincronizada palavra por palavra com `maxAllowedW = W - 150` sobre escudo escuro gradual (`Y > 66%`).
+### Campos por Cena (`cenas[]`)
+1. **Voz, Prosódia & Sanitização PT-BR (`scripts/generate_tts.py`):**
+   - `"voz"`: `"menino"`, `"mae"`, `"vo"`, `"professor"`, `"diretora"`, `"padeiro"`, `"amigo"`, `"npc"`, `"caixa"`, `"motorista"`, `"sindica"`, `"narrador"`.
+   - `"emocao"` *(opcional)*: `"gancho"`, `"animado"`, `"choque"`, `"panico"`, `"dramatico"`, `"acolhedor"`, `"bravo"`, `"comemorando"`.
+   - `"rate"` / `"pitch"` *(opcional)*: ex. `"+18%"`, `"+5Hz"`.
+   - O sanitizador converte automaticamente `R$ 50`, `99%`, `1º`, `HP`, `XP`, remove ruídos finais (`"he"`, emojis) e salva `words` + `blocks` em `output/audio/<slug>/manifest.json`.
 
-4. **Equipe Criativa de Apoio (Opcional):**
-   - Consulte `personagens-01`, `pecas-01` e `movimento-01` via `invoke_subagent` (modo somente leitura) para enriquecer props, HUDs e animações determinísticas.
+2. **Cenários Interativos (`assets/scenes/environments.js`):**
+   - Novos presets interativos v2: `"casa_vo"` (pote de sorvete abrindo), `"escola_parkour"` (plataformas sobre lava borbulhante), `"padaria"` (esteira rolante + salgados), `"rua_cidade"` (parallax + semáforo), `"servidor_admin"` (porta admin abrindo + matriz neon), `"quarto_gamer"` (LED RGB + dual monitor), além dos 60+ presets clássicos retrocompatíveis.
+   - Props dinâmicos por cena: `"pix_valor": 500` (contador `R$` subindo em tempo real), `"hud_badge": "FASE 2"` (pílula única limpa), `"titulo_1..3"` (exibidos apenas nos primeiros `2.5s` no vídeo e fixos na thumbnail).
 
-## 3. Pipeline de Renderização + Auditoria Visual (`revisao-01`)
-1. Renderizar vídeo + áudio isolado + frames de revisão:
+3. **Elenco, Estados Físicos, Trajetórias & Acessórios (`personagens[]`):**
+   - `"tipo"`: `"menino"`, `"mae"`, `"caramelo"`, `"vo"`, `"professor"`, `"diretora"`, `"padeiro"`, `"amigo"`, `"npc"`.
+   - `"state"`: `"idle"` (respiração + piscada natural), `"walk"`, `"run"` (inclinação + poeira), `"jump"` (squash/parábola/stretch), `"fall"`, `"shock"` / `"panic"` (tremor + suor + `!`), `"celebrate"` (pulos + confete), `"talk"` (lip-sync pela envoltória da fala ativa).
+   - **Trajetória física real:** `"fromX"`, `"toX"`, `"fromY"`, `"toY"` (`0..1` proporcional ou pixels) + `"path": "jump_platforms" | "walk" | "run" | "fall"` (`"hops": 3`).
+   - **Acessórios modulares (`"accessories"`):** `hat` (`"cap"|"chef"|"graduation"|"beanie"`), `glasses` (`"round"|"square"|"cool"`), `apron`, `crown`, `backpack`, `megaphone`, `item_in_hand` (`"chinelo"|"tablet"|"clipboard"|"ruler"|"pix_phone"|"coxinha"|"bread_bag"|"wooden_spoon"|"money"`).
+
+4. **Câmera Virtual & Anti-Poluição (`camera`):**
+   - `"zoom"`: `"zoomIn"`, `"zoomOut"`, `"punchZoom"` (`"punchAt": 0.2`), `"static"`.
+   - `"shake"`: `"none"`, `"leve"`, `"medio"`, `"intenso"` (`"shakeAt"`, `"shakeDur"`).
+   - `"followTarget"`: ID ou tipo do personagem em movimento (ex.: `"menino"`).
+   - `"transition"`: `"whip"`, `"flash"`, `"slide"`, `"cut"`.
+   - Legendas de retenção (`2–4` palavras/bloco com palavra ativa destacada) ficam em `Y = 0.815 * H` e `X = 0.465 * W`, 100% livres dos ícones laterais e inferiores do YouTube Shorts.
+
+5. **SFX Procedurais Sincronizados + Audio Ducking (`sfx`):**
+   - Catálogo em `assets/sfx/`: `jump`, `land`, `lava_burn`, `error_buzzer`, `pix_ding`, `cash_register`, `whoosh`, `pop`, `vine_boom_lite`, `powerup`, `alarm`, `shock`, `win`.
+   - Formato simples `["whoosh", "pix_ding"]` ou por timestamp `[{"name": "jump", "at": 0.3, "volume": 0.55}]`.
+   - A trilha `bgm_loop.wav` sofre *audio ducking* automático (`sidechaincompress`) sempre que há voz ativa.
+
+## 3. Pipeline de Validação, Preview Rápido, Render Final & Revisão
+1. **Validar roteiro JSON:**
+   ```powershell
+   node scripts/validate_script.js scripts/<slug>.json
+   ```
+2. **Preview Rápido (`540x960 @ 15fps`, ultrafast, poucos segundos):**
+   ```powershell
+   node scripts/render_video.js scripts/<slug>.json --preview
+   ```
+3. **Render Final (`1080x1920` ou `1920x1080 @ 30fps`) + Thumbnail 16:9:**
    ```powershell
    node scripts/render_video.js scripts/<slug>.json
+   node scripts/render_thumbs_16x9.js
    ```
-   *(O `Sync-Guard` dentro do `render_video.js` dispara automaticamente `scripts/generate_tts.py` em `output/audio/<slug>/manifest.json` com `WordBoundary` sempre que o texto ou a voz mudar.)*
-2. Gerar Thumbnail 16:9 (`1280x720`) em `scripts/render_thumbs_16x9.js` -> `output/<slug>_thumb_16x9.jpg`.
-3. **Auditoria Visual Obrigatória:** Invoque `revisao-01` para inspecionar com `read_file` todos os `output/revisao/<slug>_cena_*.jpg` e thumbs. Se houver qualquer colisão ou corte de texto, ajuste as coordenadas, re-renderize e re-verifique até obter **`VEREDITO: APROVADO`**.
+4. **Auditoria Visual Obrigatória (`revisao-01`):** Invoque `revisao-01` sobre `output/revisao/<slug>_cena_*.jpg` até obter `VEREDITO: APROVADO`.
 
-## 4. Aprovação do Usuário, Analytics & Escala de 10 Vídeos/Dia
-1. **Análise de Vídeos Virais (`check_analytics.py`):** Antes de criar novos lotes, rode `python -u scripts/check_analytics.py` para ver os vídeos com maior velocidade de views/hora (`vph`) e likes no canal `@VidadeBlocoBR`, dobrando a aposta nos temas vencedores.
-2. **PARE E MOSTRE AO USUÁRIO PRIMEIRO:** Envie os links clicáveis dos `.mp4`, das thumbnails e os títulos/descrições sugeridos. **Jamais publique sem aprovação explícita!**
-3. **Após o "pode publicar" ou "publique os vídeos pendentes" do usuário:**
-   - Sempre salve vídeos já aprovados que aguardam janela de upload em `scripts/fila_pendentes.json` (`"status": "pending"`).
-   - Quando o usuário disser *"pode publicar"* ou *"publique os vídeos pendentes"*, rode imediatamente `python -u scripts/publish_pending.py` (ele publica cada item pendente com título, descrição, tags e thumbnail, grava o link publicado e pausa com segurança caso o limite de 24h do YouTube ainda esteja ativo).
-   - **Publicação avulsa imediata:** `python -u scripts/upload_youtube.py --video output/<slug>_poxarique.mp4 --title "<Título>" --description "<Descrição>" --tags "<tags>" --privacy public --thumbnail output/<slug>_thumb_16x9.jpg`
-   - **Escala de 10 vídeos/dia agendados (sem spam):** Salve a fila aprovada em JSON e rode `python -u scripts/schedule_batch_youtube.py --date YYYY-MM-DD --manifest scripts/fila_publicacao.json` (usa `--publish-at` na API do YouTube para soltar automaticamente nos 10 horários de pico entre `08:00` e `20:00` `-03:00`).
-4. Se precisar excluir vídeos antigos no YouTube, use `python -u scripts/delete_youtube.py <videoId1> <videoId2>`.
+## 4. Aprovação Humana & Publicação no YouTube
+- **PARE E MOSTRE AO USUÁRIO PRIMEIRO:** Envie os links dos `.mp4` e thumbnails. **Jamais publique sem aprovação explícita!**
+- Após aprovação: `python -u scripts/upload_youtube.py --video output/<slug>_poxarique.mp4 --title "<Título>" --description "<Descrição>" --tags "<tags>" --privacy public --thumbnail output/<slug>_thumb_16x9.jpg` (ou `publish_pending.py` / `schedule_batch_youtube.py`).

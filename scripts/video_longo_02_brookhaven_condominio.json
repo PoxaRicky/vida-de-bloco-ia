@@ -9,7 +9,7 @@
       "voz": "menino",
       "texto": "Acordei hoje e descobri que qualquer vizinho pode invadir minha casa clicando num botão de Brookhaven!",
       "ambiente": "brookhaven_hook",
-      "hud_dias": "HORA 01 / 24",
+      "hud_dias": "01H",
       "destaque": { "VIZINHO": "#FFD426", "BROOKHAVEN!": "#38BDF8" }
     },
     {
@@ -17,7 +17,7 @@
       "voz": "menino",
       "texto": "De manhã, o prédio inteiro ganhou o menu de spawn! Os vizinhos trocavam de apartamento a cada cinco minutos e a síndica perdeu o controle da portaria.",
       "ambiente": "brookhaven_portaria",
-      "hud_dias": "HORA 06 / 24",
+      "hud_dias": "06H",
       "destaque": { "SPAWN!": "#5CE65C", "SÍNDICA": "#C084FC" }
     },
     {
@@ -25,7 +25,7 @@
       "voz": "mae",
       "texto": "De tarde, descobrimos um cofre secreto atrás do botijão de gás! Mas quem mexer no meu Tupperware lendário vai levar ban!",
       "ambiente": "brookhaven_cofre",
-      "hud_dias": "HORA 14 / 24",
+      "hud_dias": "14H",
       "destaque": { "COFRE": "#FFD426", "TUPPERWARE": "#FF66B2" }
     },
     {
@@ -33,7 +33,7 @@
       "voz": "menino",
       "texto": "Às dez da noite a síndica ativou o modo banir do servidor! Teve perseguição épica de patinete pela garagem inteira!",
       "ambiente": "brookhaven_perseguicao",
-      "hud_dias": "HORA 22 / 24",
+      "hud_dias": "22H",
       "destaque": { "BANIR": "#FF5733", "PATINETE": "#FFD426" }
     },
     {
@@ -41,7 +41,7 @@
       "voz": "menino",
       "texto": "À meia-noite o servidor reiniciou e tudo voltou ao normal, mas o carro do meu pai ainda está spawnado em cima da árvore!",
       "ambiente": "brookhaven_desfecho",
-      "hud_dias": "HORA 24 / 24",
+      "hud_dias": "24H",
       "destaque": { "REINICIOU": "#5CE65C", "ÁRVORE!": "#FFD426" }
     },
     {

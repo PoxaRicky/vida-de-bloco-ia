@@ -1,13 +1,13 @@
 {
   "name": "vida-de-bloco",
-  "displayName": "Vida de Bloco (@VidadeBlocoBR)",
-  "version": "1.0.0",
-  "description": "Agente completo do canal Vida de Bloco (@VidadeBlocoBR): cria roteiros originais 'E se...?', desenha personagens e cenários 2D/2.5D exclusivos, sincroniza narração multi-voz + legenda palavra por palavra, gera thumbnails 16:9, audita quadro a quadro com revisao-01 e publica no YouTube após sua aprovação.",
+  "displayName": "Vida de Bloco v2 (@VidadeBlocoBR)",
+  "version": "2.0.0",
+  "description": "Agente completo v2 do canal Vida de Bloco (@VidadeBlocoBR): cria roteiros 'E se...?', rigs 2D/2.5D com física de estados e acessórios modulares, cenários interativos com trajetórias reais, câmera virtual, TTS sanitizado + SFX com ducking, modo --preview rápido, auditoria com revisao-01 e upload para o YouTube após aprovação.",
   "logo": "assets/logo.svg",
   "repository": "https://github.com/PoxaRicky/vida-de-bloco-ia",
   "suggestedPrompts": [
-    "Crie um lote de 3 Shorts originais 'E se...?' para o Vida de Bloco e me mande para aprovar",
-    "Crie um vídeo longo 16:9 'E se o Brasil virasse Roblox por 7 dias?' com thumb e me mande para revisar",
+    "Crie um Short v2 'E se...?' com parkour/trajetórias reais, rode em --preview e me mande revisar",
+    "Crie um vídeo longo 16:9 'E se o Brasil virasse Roblox?' com câmera dinâmica e me mande aprovar",
     "Publique os vídeos aprovados no YouTube com título, descrição, tags e thumbnail"
   ]
 }

@@ -141,8 +141,8 @@ async function main() {
           sunburst(ctx, CX, 390, "#EC4899", "#4C1D95");
           VB.isoCube(ctx, 215, 210, 108, "#F9A8D4", "#EC4899", "#9D174D", 5);
           VB.isoCube(ctx, 1065, 510, 108, "#FFE566", "#FFD426", "#D97706", 5);
-          VB.drawMom(ctx, { x: CX + 70, y: 580, scale: 1.05, expr: "angry", t: 0.4 });
-          VB.drawBoy(ctx, { x: CX - 75, y: 590, scale: 1.05, expr: "shocked_extreme", goldenShoes: true, t: 0.4 });
+          VB.drawMom(ctx, { x: CX + 105, y: 580, scale: 0.92, expr: "angry", t: 0.4 });
+          VB.drawBoy(ctx, { x: CX - 105, y: 590, scale: 0.92, expr: "shocked_extreme", goldenShoes: true, t: 0.4 });
           stroked(ctx, "MÃE NO", CX, 78, 48, "#FFFFFF", 12, MAX_TEXT_W);
           stroked(ctx, "DRESS TO", CX, 142, 62, "#FFD426", 15, MAX_TEXT_W);
           stroked(ctx, "IMPRESS?!", CX, 204, 54, "#5CE65C", 13, MAX_TEXT_W);
@@ -156,16 +156,15 @@ async function main() {
           stroked(ctx, "SEGURA!!", CX, 204, 54, "#FFD426", 13, MAX_TEXT_W);
         } else if (kind === "brookhaven_condominio") {
           sunburst(ctx, 880, 380, "#2563EB", "#1E1B4B");
-          VB.isoCube(ctx, 120, 125, 95, "#93C5FD", "#3B82F6", "#1D4ED8", 5);
-          VB.isoCube(ctx, 1175, 130, 95, "#FFE566", "#FFD426", "#D97706", 5);
-          VB.drawSindica(ctx, { x: 750, y: 520, scale: 1.15, expr: "angry", megaphone: true, t: 0.4 });
-          VB.drawBoy(ctx, { x: 965, y: 520, scale: 1.25, expr: "shocked_extreme", goldenShoes: true, t: 0.4 });
-          VB.drawMom(ctx, { x: 1150, y: 520, scale: 1.15, expr: "angry", t: 0.4 });
+          VB.isoCube(ctx, 1175, 130, 95, "#93C5FD", "#3B82F6", "#1D4ED8", 5);
+          VB.drawSindica(ctx, { x: 735, y: 530, scale: 0.92, expr: "angry", megaphone: true, t: 0.4 });
+          VB.drawBoy(ctx, { x: 945, y: 530, scale: 0.96, expr: "shocked_extreme", goldenShoes: true, t: 0.4 });
+          VB.drawMom(ctx, { x: 1155, y: 530, scale: 0.92, expr: "angry", t: 0.4 });
           VB.celBox(ctx, 70, 56, 260, 58, 28, "#16182D", 5, 0);
           stroked(ctx, "🕒 24 HORAS", 200, 86, 34, "#38BDF8", 6);
-          stroked(ctx, "CONDOMÍNIO", 355, 225, 78, "#FFFFFF", 18, 610);
-          stroked(ctx, "BROOKHAVEN", 355, 345, 84, "#FFD426", 20, 620);
-          stroked(ctx, "POR 24H?!", 355, 465, 86, "#5CE65C", 18, 610);
+          stroked(ctx, "CONDOMÍNIO", 320, 225, 74, "#FFFFFF", 18, 520);
+          stroked(ctx, "BROOKHAVEN", 320, 345, 78, "#FFD426", 20, 520);
+          stroked(ctx, "POR 24H?!", 320, 465, 80, "#5CE65C", 18, 520);
           VB.drawWatermark(ctx, 1280, 720, "Vida de Bloco", true);
           return c.toDataURL("image/jpeg", 0.93).split(",")[1];
         }

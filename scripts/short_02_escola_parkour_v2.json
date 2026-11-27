@@ -1,0 +1,191 @@
+{
+  "titulo": "E Se a Escola Virasse um Parkour Valendo Pix no Roblox? 😱",
+  "formato": "short",
+  "marca_dagua": "PoxaRique!",
+  "arquivo_saida": "short_02_escola_parkour_v2_poxarique.mp4",
+  "cenas": [
+    {
+      "id": "hook_parkour",
+      "voz": "menino",
+      "emocao": "gancho",
+      "texto": "E se a sua escola virasse um parkour de lava valendo R$ 50 no Pix?",
+      "ambiente": "escola_parkour",
+      "titulo_1": "E SE A ESCOLA",
+      "titulo_2": "VIRASSE LAVA",
+      "titulo_3": "VALENDO PIX NO ROBLOX?",
+      "lousa_texto": "PROVA FINAL: PULE OU ZERE!",
+      "hud_badge": "NÍVEL 1",
+      "camera": { "zoom": "punchZoom", "punchAt": 0.12, "shake": "leve" },
+      "sfx": [
+        { "name": "alarm", "at": 0.0, "volume": 0.42 },
+        { "name": "jump", "at": 0.65, "volume": 0.52 },
+        { "name": "pix_ding", "at": 2.1, "volume": 0.55 }
+      ],
+      "personagens": [
+        {
+          "id": "heroi",
+          "tipo": "menino",
+          "fromX": 0.16,
+          "toX": 0.66,
+          "fromY": 0.57,
+          "toY": 0.55,
+          "path": "jump_platforms",
+          "hops": 3,
+          "jumpArc": 155,
+          "scale": 1.15,
+          "backpack": true,
+          "goldenShoes": true
+        },
+        {
+          "tipo": "professor",
+          "x": 0.78,
+          "y": 0.55,
+          "scale": 1.0,
+          "state": "shock",
+          "flip": true,
+          "nametag": "Prof_Admin"
+        }
+      ],
+      "destaque": { "PARKOUR": "#5CE65C", "LAVA": "#FF5733", "PIX?": "#FFD426" }
+    },
+    {
+      "id": "corredor_99",
+      "voz": "professor",
+      "emocao": "bravo",
+      "texto": "Atenção turma: 99% já caiu na lava antes do recreio!",
+      "ambiente": "escola_parkour",
+      "lousa_texto": "99% REPROVADOS NO SALTO!",
+      "hud_badge": "FASE 2",
+      "camera": { "zoom": "zoomIn", "followTarget": "amigo_1", "shake": "medio", "shakeAt": 0.8, "transition": "whip" },
+      "sfx": [
+        { "name": "whoosh", "at": 0.0 },
+        { "name": "error_buzzer", "at": 0.85 },
+        { "name": "lava_burn", "at": 1.45 }
+      ],
+      "personagens": [
+        {
+          "tipo": "professor",
+          "x": 0.29,
+          "y": 0.56,
+          "scale": 1.12,
+          "state": "talk",
+          "accessories": { "glasses": "square", "megaphone": true },
+          "nametag": "Prof_Severo"
+        },
+        {
+          "id": "amigo_1",
+          "tipo": "amigo",
+          "fromX": 0.65,
+          "toX": 0.69,
+          "fromY": 0.45,
+          "toY": 0.67,
+          "path": "fall",
+          "scale": 1.08,
+          "shirtColor": "#F97316",
+          "accessories": { "hat": "cap", "backpack": "#2563EB" },
+          "nametag": "Enzo_Noob"
+        }
+      ],
+      "destaque": { "99%": "#FFD426", "LAVA": "#FF5733", "RECREIO!": "#5CE65C" }
+    },
+    {
+      "id": "cantina_padaria",
+      "voz": "menino",
+      "emocao": "animado",
+      "texto": "Usei o tênis dourado na esteira da cantina e farmei R$ 500 de coxinha!",
+      "ambiente": "padaria",
+      "pix_valor": 500,
+      "hud_badge": "COMBO X10",
+      "camera": { "zoom": "zoomIn", "followTarget": "menino", "transition": "slide" },
+      "sfx": [
+        { "name": "jump", "at": 0.15 },
+        { "name": "land", "at": 0.65 },
+        { "name": "cash_register", "at": 1.55 }
+      ],
+      "personagens": [
+        {
+          "tipo": "padeiro",
+          "x": 0.26,
+          "y": 0.58,
+          "scale": 1.12,
+          "state": "shock",
+          "nametag": "Tio_Cantina"
+        },
+        {
+          "tipo": "menino",
+          "fromX": 0.84,
+          "toX": 0.58,
+          "fromY": 0.55,
+          "toY": 0.55,
+          "path": "run",
+          "scale": 1.15,
+          "goldenShoes": true,
+          "accessories": { "item_in_hand": "coxinha" }
+        }
+      ],
+      "destaque": { "DOURADO": "#FFD426", "R$": "#5CE65C", "500": "#5CE65C", "COXINHA!": "#FF66B2" }
+    },
+    {
+      "id": "pote_vo_checkpoint",
+      "voz": "vo",
+      "emocao": "acolhedor",
+      "texto": "Calma meu netinho, abre esse pote de sorvete que tem bônus secreto!",
+      "ambiente": "casa_vo",
+      "pote_conteudo": "robux",
+      "hud_badge": "CHECKPOINT",
+      "camera": { "zoom": "punchZoom", "punchAt": 1.1, "shake": "leve", "shakeAt": 1.1, "transition": "whip" },
+      "sfx": [
+        { "name": "pop", "at": 0.1 },
+        { "name": "vine_boom_lite", "at": 1.15 },
+        { "name": "powerup", "at": 1.75 }
+      ],
+      "destaque": { "SORVETE": "#38BDF8", "BÔNUS": "#FFD426", "SECRETO!": "#5CE65C" }
+    },
+    {
+      "id": "cta_admin_vitoria",
+      "voz": "menino",
+      "emocao": "comemorando",
+      "texto": "Zerei a escola como Admin! Comenta ESCOLA se você passaria de primeira!",
+      "ambiente": "servidor_admin",
+      "porta_label": "APROVADO VIP",
+      "pix_valor": 1000,
+      "hud_badge": "VITÓRIA!",
+      "camera": { "zoom": "zoomOut", "transition": "flash" },
+      "sfx": [
+        { "name": "win", "at": 0.05 },
+        { "name": "pix_ding", "at": 1.1 }
+      ],
+      "personagens": [
+        {
+          "tipo": "vo",
+          "x": 0.24,
+          "y": 0.58,
+          "scale": 1.08,
+          "state": "celebrate",
+          "accessories": { "crown": true, "item_in_hand": "money" }
+        },
+        {
+          "tipo": "menino",
+          "x": 0.52,
+          "y": 0.59,
+          "scale": 1.18,
+          "state": "celebrate",
+          "expr": "star_eyes",
+          "goldenShoes": true,
+          "accessories": { "crown": true, "item_in_hand": "pix_phone" },
+          "nametag": "Admin_Escola"
+        },
+        {
+          "tipo": "caramelo",
+          "x": 0.78,
+          "y": 0.64,
+          "scale": 1.02,
+          "state": "celebrate",
+          "sunglasses": true,
+          "crown": true
+        }
+      ],
+      "destaque": { "ADMIN!": "#FFD426", "ESCOLA": "#5CE65C", "PRIMEIRA!": "#38BDF8" }
+    }
+  ]
+}

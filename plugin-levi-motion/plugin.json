@@ -1,0 +1,12 @@
+{
+  "name": "levi-motion",
+  "displayName": "Agentes de Animação (Levi Motion)",
+  "version": "1.0.0",
+  "description": "Equipe de 10 subagentes especializados (voz, cenas, personagens, texto, peças, movimento, cor, som, código e revisão) para criar e ajustar animações verticais em Remotion (padrão) ou HyperFrames.",
+  "logo": "assets/logo.svg",
+  "suggestedPrompts": [
+    "Quero uma animação vertical de uns 35 segundos feita pela equipe de agentes",
+    "TEXTO: o título da cena 2 está comprido, deixa só duas linhas",
+    "REVISÃO: confere a animação inteira de novo e me mostra um quadro de cada cena"
+  ]
+}

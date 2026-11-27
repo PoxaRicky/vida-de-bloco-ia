@@ -273,27 +273,319 @@ window.VB = window.VB || {};
     drawStuddedStreet(ctx, W, H, roadY);
   }
 
-  // Pílula HUD "7 DIAS" no canto superior direito (usada em vídeos longos 16:9)
-  VB.drawHudBadge = function (ctx, W, badgeText) {
+  // Pílula HUD compacta e fixa na tela (canto superior direito seguro, sem colidir com PoxaRique!)
+  VB.drawHudBadge = function (ctx, W, badgeText, isLandscape = true) {
     if (!badgeText) return;
     ctx.save();
-    const bw = 250;
-    const bh = 68;
-    const bx = W - bw - 36;
-    const by = 32;
-    VB.celBox(ctx, bx, by, bw, bh, 34, "#1E2038", 5, 0);
+    const bw = isLandscape ? 250 : Math.min(340, Math.max(200, badgeText.length * 22 + 82));
+    const bh = isLandscape ? 68 : 54;
+    const bx = W - bw - 34;
+    const by = isLandscape ? 32 : 28;
+    VB.celBox(ctx, bx, by, bw, bh, bh / 2, "#1E2038", 5, 0);
     ctx.beginPath();
-    ctx.arc(bx + 42, by + bh / 2, 18, 0, Math.PI * 2);
-    ctx.lineWidth = 5;
-    ctx.strokeStyle = "#3FA9F5";
+    ctx.arc(bx + 34, by + bh / 2, 12, 0, Math.PI * 2);
+    ctx.fillStyle = "#5CE65C";
+    ctx.fill();
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = "#1A1423";
     ctx.stroke();
-    strokedText(ctx, badgeText, bx + 148, by + bh / 2 + 1, 34, "#FFFFFF", 6);
+    strokedText(ctx, badgeText, bx + bw / 2 + 14, by + bh / 2 + 1, isLandscape ? 32 : 26, "#FFFFFF", 6);
+    ctx.restore();
+  };
+
+  // =========================================================================
+  // ELEMENTOS INTERATIVOS E TRAJETÓRIAS FÍSICAS REAIS (v2)
+  // =========================================================================
+  function resolveCoord(val, dim, fallback) {
+    if (val === undefined || val === null) return fallback;
+    const n = Number(val);
+    if (Number.isNaN(n)) return fallback;
+    return Math.abs(n) <= 2.0 ? n * dim : n;
+  }
+
+  VB.resolveActorTransform = function (actor, W, H, t, sceneDur, progress) {
+    const p = Math.max(0, Math.min(1, progress !== undefined ? progress : (sceneDur > 0 ? t / sceneDur : 0)));
+    const fx = resolveCoord(actor.fromX !== undefined ? actor.fromX : actor.x, W, W * 0.5);
+    const tx = resolveCoord(actor.toX !== undefined ? actor.toX : fx, W, fx);
+    const fy = resolveCoord(actor.fromY !== undefined ? actor.fromY : actor.y, H, H * 0.68);
+    const ty = resolveCoord(actor.toY !== undefined ? actor.toY : fy, H, fy);
+    const pathMode = String(actor.path || "none").toLowerCase();
+
+    let x = fx + (tx - fx) * p;
+    let y = fy + (ty - fy) * p;
+    let state = actor.state || actor.anim || actor.pose || "idle";
+    let jumpPhase = undefined;
+    let jumpHeight = 0;
+    let flip = actor.flip !== undefined ? Boolean(actor.flip) : tx < fx - 8;
+
+    if (pathMode === "walk") {
+      const ease = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+      x = fx + (tx - fx) * ease;
+      y = fy + (ty - fy) * ease;
+      if (!actor.state && !actor.anim) state = "walk";
+    } else if (pathMode === "run") {
+      const ease = 1 - Math.pow(1 - p, 1.35);
+      x = fx + (tx - fx) * ease;
+      y = fy + (ty - fy) * ease;
+      if (!actor.state && !actor.anim) state = "run";
+    } else if (pathMode === "jump_platforms") {
+      const hops = Math.max(1, Number(actor.hops || 3));
+      const scaled = p * hops;
+      const hopIdx = Math.min(hops - 1, Math.floor(scaled));
+      const localP = Math.min(1, scaled - hopIdx);
+      const x0 = fx + ((tx - fx) * hopIdx) / hops;
+      const x1 = fx + ((tx - fx) * (hopIdx + 1)) / hops;
+      const y0 = fy + ((ty - fy) * hopIdx) / hops;
+      const y1 = fy + ((ty - fy) * (hopIdx + 1)) / hops;
+      const arcH = actor.jumpArc !== undefined ? Number(actor.jumpArc) : 155;
+      const airArc = 4 * localP * (1 - localP);
+      x = x0 + (x1 - x0) * localP;
+      y = y0 + (y1 - y0) * localP - airArc * arcH;
+      state = actor.state || "jump";
+      jumpPhase = localP;
+      jumpHeight = 0;
+    } else if (pathMode === "fall") {
+      const gP = Math.min(1, p * p * 1.15);
+      x = fx + (tx - fx) * p;
+      y = fy + (ty - fy) * gP;
+      if (!actor.state && !actor.anim) {
+        state = gP >= 0.98 && actor.landImpact !== false ? "shock" : "fall";
+      }
+    }
+
+    return { x, y, state, jumpPhase, jumpHeight, flip };
+  };
+
+  VB.renderSceneActors = function (ctx, W, H, actors, t, sceneDur, progress, S = 1) {
+    if (!Array.isArray(actors) || actors.length === 0) return;
+    actors.forEach((actor) => {
+      const tr = VB.resolveActorTransform(actor, W, H, t, sceneDur, progress);
+      const opts = Object.assign({}, actor, {
+        x: tr.x,
+        y: tr.y,
+        scale: (actor.scale !== undefined ? actor.scale : 1.25) * S,
+        state: tr.state,
+        flip: tr.flip,
+        t,
+        progress,
+      });
+      if (tr.jumpPhase !== undefined) {
+        opts.jumpPhase = tr.jumpPhase;
+        opts.jumpHeight = tr.jumpHeight;
+      }
+      VB.drawCharacter(ctx, actor.tipo || actor.personagem || "menino", opts);
+    });
+  };
+
+  // Lava ou ácido borbulhante animado
+  VB.drawBubblingHazard = function (ctx, W, H, topY, t, kind = "lava") {
+    const isAcid = kind === "acid";
+    const cTop = isAcid ? "#84CC16" : "#FACC15";
+    const cMid = isAcid ? "#22C55E" : "#F97316";
+    const cBot = isAcid ? "#15803D" : "#DC2626";
+
+    ctx.save();
+    const grad = ctx.createLinearGradient(0, topY, 0, H);
+    grad.addColorStop(0, cMid);
+    grad.addColorStop(1, cBot);
+
+    ctx.beginPath();
+    ctx.moveTo(0, H);
+    for (let x = 0; x <= W + 40; x += 40) {
+      const wave = Math.sin(x * 0.018 + t * 5.2) * 12 + Math.cos(x * 0.032 - t * 3.4) * 6;
+      ctx.lineTo(x, topY + wave);
+    }
+    ctx.lineTo(W, H);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = OUTLINE;
+    ctx.stroke();
+
+    // Brilho superficial e bolhas subindo
+    for (let i = 0; i < 9; i++) {
+      const bx = ((i * 137 + t * 42 * (i % 2 === 0 ? 1 : -1)) % W + W) % W;
+      const cyc = ((t * 1.4 + i * 0.27) % 1);
+      const by = topY + 35 - cyc * 58;
+      const br = cyc < 0.85 ? 8 + cyc * 16 : (1 - cyc) * 90;
+      ctx.globalAlpha = cyc < 0.85 ? 0.88 : (1 - cyc) * 4;
+      ctx.beginPath();
+      ctx.arc(bx, by, Math.max(3, br), 0, Math.PI * 2);
+      ctx.fillStyle = cTop;
+      ctx.fill();
+      ctx.lineWidth = 3.5;
+      ctx.strokeStyle = OUTLINE;
+      ctx.stroke();
+    }
+    ctx.restore();
+  };
+
+  // Esteira rolante animada (padaria / mercado / fábrica)
+  VB.drawConveyorBelt = function (ctx, x, y, w, h, t, speed = 130) {
+    ctx.save();
+    VB.celBox(ctx, x, y, w, h, h / 2, "#334155", 6, 0.2);
+    VB.celBox(ctx, x + 12, y + 10, w - 24, h - 20, (h - 20) / 2, "#1E293B", 4, 0);
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.roundRect(x + 14, y + 10, w - 28, h - 20, (h - 20) / 2);
+    ctx.clip();
+    ctx.strokeStyle = "#64748B";
+    ctx.lineWidth = 6;
+    const step = 42;
+    const shift = (t * speed) % step;
+    for (let tx = x - step + shift; tx < x + w + step; tx += step) {
+      ctx.beginPath();
+      ctx.moveTo(tx, y + 10);
+      ctx.lineTo(tx + 12, y + h / 2);
+      ctx.lineTo(tx, y + h - 10);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // Roletes giratórios nas pontas
+    [x + h / 2, x + w - h / 2].forEach((rx) => {
+      ctx.save();
+      ctx.translate(rx, y + h / 2);
+      ctx.rotate(t * 6);
+      ctx.beginPath();
+      ctx.arc(0, 0, h * 0.32, 0, Math.PI * 2);
+      ctx.fillStyle = "#94A3B8";
+      ctx.fill();
+      ctx.lineWidth = 4.5;
+      ctx.strokeStyle = OUTLINE;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(-h * 0.24, 0);
+      ctx.lineTo(h * 0.24, 0);
+      ctx.stroke();
+      ctx.restore();
+    });
+    ctx.restore();
+  };
+
+  // Contador de Pix subindo em tempo real
+  VB.drawPixCounter = function (ctx, x, y, t, progress, targetVal = 1500, scale = 1) {
+    ctx.save();
+    const p = Math.min(1, Math.max(0, progress * 1.25));
+    const eased = 1 - Math.pow(1 - p, 2.4);
+    const val = Math.round(targetVal * eased);
+    const formatted = val.toLocaleString("pt-BR");
+    const pulse = 1 + Math.sin(t * 14) * 0.035;
+
+    ctx.translate(x, y);
+    ctx.scale(scale * pulse, scale * pulse);
+    VB.celBox(ctx, -185, -46, 370, 92, 24, "#064E3B", 6, 0.2);
+    VB.celBox(ctx, -172, -32, 64, 64, 16, "#22C55E", 4.5, 0);
+    strokedText(ctx, "❖", -140, 2, 34, "#FFFFFF", 5);
+    strokedText(ctx, `R$ ${formatted},00`, 34, 4, 38, "#86EFAC", 7);
+    ctx.restore();
+  };
+
+  // Pote de sorvete abrindo a tampa e revelando feijão (ou surpresa)
+  VB.drawOpeningPot = function (ctx, x, y, progress, t, scale = 1, content = "feijao") {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(scale, scale);
+
+    // Corpo do pote branco/azul de sorvete
+    VB.celBox(ctx, -95, -20, 190, 118, 22, "#F8FAFC", 6, 0.22);
+    VB.celBox(ctx, -82, 16, 164, 52, 14, "#38BDF8", 4.5, 0);
+    strokedText(ctx, "CREME", 0, 43, 26, "#FFD426", 5);
+
+    const openP = Math.max(0, Math.min(1, (progress - 0.15) / 0.45));
+    if (openP > 0.08) {
+      // Conteúdo interno (feijão fumegante ou Robux brilhante)
+      ctx.beginPath();
+      ctx.ellipse(0, -18, 82, 22, 0, 0, Math.PI * 2);
+      ctx.fillStyle = content === "robux" ? "#22C55E" : "#78350F";
+      ctx.fill();
+      ctx.lineWidth = 4.5;
+      ctx.strokeStyle = OUTLINE;
+      ctx.stroke();
+
+      // Vapor saindo
+      ctx.strokeStyle = "rgba(255,255,255,0.8)";
+      ctx.lineWidth = 5;
+      [-30, 0, 30].forEach((sx, i) => {
+        const wy = ((t * 42 + i * 16) % 45) * openP;
+        ctx.beginPath();
+        ctx.moveTo(sx, -28 - wy * 0.3);
+        ctx.quadraticCurveTo(sx + 10, -48 - wy * 0.6, sx - 6, -68 - wy);
+        ctx.stroke();
+      });
+    }
+
+    // Tampa articulada abrindo
+    ctx.save();
+    ctx.translate(-95, -22);
+    ctx.rotate(-openP * 1.15);
+    VB.celBox(ctx, -8, -18, 206, 26, 10, "#0284C7", 6, 0.18);
+    ctx.restore();
+
+    ctx.restore();
+  };
+
+  // Porta interativa abrindo com feixe de luz
+  VB.drawAnimatedDoor = function (ctx, x, y, w, h, progress, label = "ADMIN") {
+    ctx.save();
+    const openP = Math.max(0, Math.min(1, (progress - 0.1) / 0.55));
+    // Batente e interior iluminado
+    VB.celBox(ctx, x - 12, y - 12, w + 24, h + 12, 14, "#334155", 6, 0);
+    const glow = ctx.createLinearGradient(x, y, x + w, y + h);
+    glow.addColorStop(0, "#FEF08A");
+    glow.addColorStop(1, "#38BDF8");
+    ctx.fillStyle = glow;
+    ctx.fillRect(x, y, w, h);
+
+    // Folha da porta girando em perspectiva
+    const leafW = Math.max(18, w * (1 - openP * 0.78));
+    VB.celBox(ctx, x, y, leafW, h, 8, "#7C2D12", 6, 0.24);
+    ctx.beginPath();
+    ctx.arc(x + leafW - 16, y + h * 0.52, 8, 0, Math.PI * 2);
+    ctx.fillStyle = "#FFD426";
+    ctx.fill();
+    ctx.stroke();
+
+    if (label) {
+      VB.celBox(ctx, x + w / 2 - 74, y - 54, 148, 40, 12, "#1E1B4B", 5, 0);
+      strokedText(ctx, label, x + w / 2, y - 33, 22, "#FFD426", 5);
+    }
+    ctx.restore();
+  };
+
+  // Nuvens em parallax suave na zona segura (respeita Y >= 305 ou céu livre)
+  VB.drawParallaxClouds = function (ctx, W, t, baseY = 335, scale = 1) {
+    ctx.save();
+    [0, 1, 2].forEach((i) => {
+      const speed = 22 + i * 11;
+      const cx = ((i * 390 + t * speed) % (W + 260)) - 130;
+      const cy = baseY + (i % 2) * 44;
+      VB.celBox(ctx, cx, cy, 165 * scale, 52 * scale, 26 * scale, "rgba(255,255,255,0.88)", 5, 0.12);
+    });
     ctx.restore();
   };
 
   VB.renderEnvironment = function (ctx, W, H, envName, t, sceneDur, cena = {}) {
     const isL = W > H;
     const S = isL ? 0.62 : 1.0;
+    const progress = sceneDur > 0 ? Math.max(0, Math.min(1, t / sceneDur)) : 0;
+    const isThumb = Boolean(VB._isThumb);
+
+    // Helper anti-poluição: exibe o título gigante de gancho apenas nos primeiros 2.5s (ou na thumbnail)
+    function drawTimedHookTitles(l1, l2, l3, c2 = "#FFD426", c3 = "#5CE65C") {
+      if (!isThumb && t > 2.65) return;
+      ctx.save();
+      if (!isThumb && t > 2.35) {
+        const fade = Math.max(0, 1 - (t - 2.35) / 0.3);
+        ctx.globalAlpha = fade;
+      }
+      strokedText(ctx, l1, W / 2, H * 0.1, Math.round(64 * S), "#FFFFFF", 14);
+      strokedText(ctx, l2, W / 2, H * 0.17, Math.round(118 * S), c2, 18);
+      strokedText(ctx, l3, W / 2, H * 0.238, Math.round(50 * S), c3, 12);
+      ctx.restore();
+    }
 
     if (envName === "hook_sunburst") {
       drawSunburst(ctx, W, H, t, "#8C65F7", "#7348E0");
@@ -307,9 +599,11 @@ window.VB = window.VB || {};
         holdingTablet: true,
         t,
       });
-      strokedText(ctx, cena.titulo_1 || "E SE SUA", W / 2, H * 0.08, Math.round(68 * S), "#FFFFFF", 14);
-      strokedText(ctx, cena.titulo_2 || "MÃE", W / 2, H * 0.15, Math.round(136 * S), "#FFD426", 18);
-      strokedText(ctx, cena.titulo_3 || "COMEÇASSE A JOGAR ROBLOX?", W / 2, H * 0.22, Math.round(52 * S), "#5CE65C", 12);
+      drawTimedHookTitles(
+        cena.titulo_1 || "E SE SUA",
+        cena.titulo_2 || "MÃE",
+        cena.titulo_3 || "COMEÇASSE A JOGAR ROBLOX?"
+      );
     } else if (envName === "hook_caramelo") {
       drawSunburst(ctx, W, H, t, "#F59E0B", "#D97706");
       const z = (2.85 + Math.min(0.22, t * 0.12)) * S;
@@ -322,9 +616,11 @@ window.VB = window.VB || {};
         pose: "closeup",
         t,
       });
-      strokedText(ctx, "E SE O CACHORRO", W / 2, H * 0.08, Math.round(66 * S), "#FFFFFF", 14);
-      strokedText(ctx, "CARAMELO", W / 2, H * 0.15, Math.round(122 * S), "#FFD426", 18);
-      strokedText(ctx, "VIRASSE DONO DO ROBLOX?", W / 2, H * 0.22, Math.round(54 * S), "#5CE65C", 12);
+      drawTimedHookTitles(
+        cena.titulo_1 || "E SE O CACHORRO",
+        cena.titulo_2 || "CARAMELO",
+        cena.titulo_3 || "VIRASSE DONO DO ROBLOX?"
+      );
     } else if (envName === "bedroom_duo") {
       const floorY = isL ? H * 0.65 : H * 0.74;
       drawStripedWall(ctx, W, floorY);
@@ -1608,7 +1904,7 @@ window.VB = window.VB || {};
       strokedText(ctx, "E SE SUA MÃE JOGASSE", W / 2, H * 0.105, Math.round(62 * S), "#FFFFFF", 15);
       strokedText(ctx, "DRESS TO IMPRESS", W / 2, H * 0.175, Math.round(76 * S), "#FFD426", 18);
       strokedText(ctx, "NA VIDA REAL?!", W / 2, H * 0.242, Math.round(68 * S), "#5CE65C", 16);
-      VB.drawBoy(ctx, { x: W * 0.5, y: H * 0.73, scale: 2.22 * S, expr: "shocked_extreme", t });
+      VB.drawBoy(ctx, { x: W * 0.5, y: H * 0.56, scale: 1.65 * S, expr: "shocked_extreme", t });
     } else if (envName === "dti_quarto") {
       const floorY = H * 0.68;
       ctx.fillStyle = "#581C87";
@@ -1623,6 +1919,8 @@ window.VB = window.VB || {};
       const floorY = H * 0.68;
       ctx.fillStyle = "#831843";
       ctx.fillRect(0, 0, W, floorY);
+      ctx.fillStyle = "#4C0519";
+      ctx.fillRect(0, floorY, W, H - floorY);
       ctx.fillStyle = "#EC4899";
       ctx.fillRect(W * 0.15, floorY, W * 0.7, H - floorY);
       VB.celBox(ctx, W * 0.08, 195, W * 0.84, 106, 22, "#16182D", 6, 0);
@@ -1653,15 +1951,13 @@ window.VB = window.VB || {};
       strokedText(ctx, "E SE O ÔNIBUS ESCOLAR", W / 2, H * 0.105, Math.round(60 * S), "#FFFFFF", 15);
       strokedText(ctx, "VIRASSE UM TSUNAMI", W / 2, H * 0.175, Math.round(70 * S), "#38BDF8", 18);
       strokedText(ctx, "DO ROBLOX?!", W / 2, H * 0.242, Math.round(74 * S), "#FFD426", 16);
-      VB.drawBoy(ctx, { x: W * 0.5 + shake, y: H * 0.73, scale: 2.22 * S, expr: "shocked_extreme", t });
+      VB.drawBoy(ctx, { x: W * 0.5 + shake, y: H * 0.56, scale: 1.65 * S, expr: "shocked_extreme", t });
     } else if (envName === "tsunami_fruta") {
       const floorY = H * 0.68;
       ctx.fillStyle = "#FACC15";
       ctx.fillRect(0, 0, W, floorY);
       ctx.fillStyle = "#1E293B";
       ctx.fillRect(0, floorY, W, H - floorY);
-      // Janela com tsunami azul
-      VB.celBox(ctx, W * 0.1, 315, W * 0.8, 220, 20, "#0284C7", 6, 0);
       VB.celBox(ctx, W * 0.08, 195, W * 0.84, 106, 22, "#16182D", 6, 0);
       strokedText(ctx, "🍈 FRUTA DA MOCHILA PESADA", W / 2, 232, Math.round(34 * S), "#A855F7", 7);
       strokedText(ctx, "Peso +500kg • Imune a curvas!", W / 2, 274, Math.round(28 * S), "#5CE65C", 6);
@@ -1750,10 +2046,364 @@ window.VB = window.VB || {};
       VB.drawMom(ctx, { x: W * 0.75, y: H * 0.56, scale: 1.12 * S, expr: "happy", pose: "cheer", t });
       strokedText(ctx, "INSCREVA-SE NO VIDA DE BLOCO!", W / 2, H * 0.12, 58, "#FFD426", 14);
       strokedText(ctx, "COMENTA \"BROOKHAVEN\" 👇", W / 2, H * 0.22, 68, "#5CE65C", 16);
+    } else if (envName === "casa_vo") {
+      // Cozinha acolhedora da Vó com pote de sorvete abrindo na mesa + relógio de pêndulo
+      const floorY = H * 0.65;
+      ctx.fillStyle = "#FEF3C7";
+      ctx.fillRect(0, 0, W, floorY);
+      ctx.strokeStyle = "rgba(217, 119, 6, 0.16)";
+      ctx.lineWidth = 3;
+      for (let gx = 0; gx < W; gx += 90) {
+        ctx.beginPath();
+        ctx.moveTo(gx, 280);
+        ctx.lineTo(gx, floorY);
+        ctx.stroke();
+      }
+      ctx.fillStyle = "#B45309";
+      ctx.fillRect(0, floorY, W, H - floorY);
+      ctx.beginPath();
+      ctx.moveTo(0, floorY);
+      ctx.lineTo(W, floorY);
+      ctx.lineWidth = 7;
+      ctx.strokeStyle = OUTLINE;
+      ctx.stroke();
+
+      VB.celBox(ctx, W * 0.1, 290, 260 * S, 200 * S, 16, "#BAE6FD", 6, 0);
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(W * 0.1 + 10, 300, 240 * S, 180 * S);
+      ctx.clip();
+      VB.drawParallaxClouds(ctx, W, t, 335, 0.65 * S);
+      ctx.restore();
+
+      ctx.save();
+      ctx.translate(W * 0.82, 365);
+      ctx.beginPath();
+      ctx.moveTo(0, 30);
+      ctx.lineTo(Math.sin(t * 4.5) * 24, 98);
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = "#78350F";
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(Math.sin(t * 4.5) * 24, 98, 16, 0, Math.PI * 2);
+      ctx.fillStyle = "#FFD426";
+      ctx.fill();
+      ctx.stroke();
+      VB.celBox(ctx, -46, -46, 92, 92, 46, "#FDE68A", 6, 0.18);
+      ctx.restore();
+
+      const tableY = floorY - 10;
+      VB.celBox(ctx, W * 0.5 - 230 * S, tableY, 460 * S, 42 * S, 14, "#92400E", 6, 0.22);
+      VB.celBox(ctx, W * 0.5 - 190 * S, tableY - 8, 380 * S, 26 * S, 10, "#FDF2F8", 4.5, 0);
+
+      if (!Array.isArray(cena.personagens) || cena.personagens.length === 0) {
+        VB.drawVovo(ctx, {
+          x: W * 0.27,
+          y: floorY - 155 * S,
+          scale: 1.18 * S,
+          expr: "happy",
+          woodenSpoon: true,
+          nametag: "Vó_Admin",
+          t,
+          progress,
+        });
+        VB.renderSceneActors(
+          ctx,
+          W,
+          H,
+          [{ tipo: "menino", fromX: 0.82, toX: 0.71, fromY: (floorY - 150 * S) / H, toY: (floorY - 150 * S) / H, path: "walk", expr: progress > 0.35 ? "shocked_extreme" : "happy", scale: 1.16 }],
+          t,
+          sceneDur,
+          progress,
+          S
+        );
+      } else {
+        VB.renderSceneActors(ctx, W, H, cena.personagens, t, sceneDur, progress, S);
+      }
+      VB.drawOpeningPot(ctx, W * 0.5, tableY - 78 * S, progress, t, 0.9 * S, cena.pote_conteudo || "feijao");
+    } else if (envName === "escola_parkour") {
+      // Corredor/sala escolar transformado em parkour obby sobre lava borbulhante!
+      const lavaY = H * 0.74;
+      const skyG = ctx.createLinearGradient(0, 0, 0, lavaY);
+      skyG.addColorStop(0, "#1E1B4B");
+      skyG.addColorStop(1, "#312E81");
+      ctx.fillStyle = skyG;
+      ctx.fillRect(0, 0, W, lavaY);
+
+      const alarmGlow = 0.45 + Math.abs(Math.sin(t * 8)) * 0.55;
+      ctx.save();
+      ctx.globalAlpha = alarmGlow * 0.22;
+      ctx.fillStyle = "#EF4444";
+      ctx.fillRect(0, 0, W, 240);
+      ctx.restore();
+
+      const hookShowing = Boolean(cena.titulo_1) && (isThumb || t <= 2.65);
+      const boardY = hookShowing ? 525 : 295;
+      VB.celBox(ctx, W * 0.5 - 310 * S, boardY, 620 * S, 165 * S, 18, "#064E3B", 7, 0.15);
+      strokedText(ctx, cena.lousa_texto || "PROVA SURPRESA = CHÃO É LAVA!", W * 0.5, boardY + 84 * S, Math.round(30 * S), "#FEF08A", 6);
+
+      const plats = [
+        { x: W * 0.16, y: lavaY - 95 * S, c: "#38BDF8" },
+        { x: W * 0.41, y: lavaY - 165 * S, c: "#FACC15" },
+        { x: W * 0.66, y: lavaY - 125 * S, c: "#5CE65C" },
+        { x: W * 0.84, y: lavaY - 185 * S, c: "#F472B6" },
+      ];
+      plats.forEach((pl, idx) => {
+        const floatY = Math.sin(t * 3.5 + idx) * 6;
+        VB.celBox(ctx, pl.x - 84 * S, pl.y + floatY, 168 * S, 36 * S, 12, pl.c, 6, 0.24);
+      });
+
+      VB.drawBubblingHazard(ctx, W, H, lavaY, t, cena.hazard_tipo || "lava");
+
+      if (!Array.isArray(cena.personagens) || cena.personagens.length === 0) {
+        VB.drawProfessor(ctx, {
+          x: W * 0.8,
+          y: plats[3].y - 235 * S,
+          scale: 1.02 * S,
+          state: "idle",
+          flip: true,
+          nametag: "Prof_Admin",
+          t,
+          progress,
+        });
+        VB.renderSceneActors(
+          ctx,
+          W,
+          H,
+          [
+            {
+              tipo: "menino",
+              fromX: 0.16,
+              toX: 0.68,
+              fromY: (plats[0].y - 235 * S) / H,
+              toY: (plats[2].y - 235 * S) / H,
+              path: "jump_platforms",
+              hops: 3,
+              jumpArc: 145 * S,
+              backpack: true,
+              goldenShoes: true,
+              scale: 1.12,
+            },
+          ],
+          t,
+          sceneDur,
+          progress,
+          S
+        );
+      } else {
+        VB.renderSceneActors(ctx, W, H, cena.personagens, t, sceneDur, progress, S);
+      }
+      if (cena.titulo_1) {
+        drawTimedHookTitles(cena.titulo_1, cena.titulo_2 || "", cena.titulo_3 || "");
+      }
+    } else if (envName === "padaria") {
+      // Padaria brasileira com esteira animada abaixo dos pés, vitrine de salgados e contador Pix
+      const floorY = H * 0.69;
+      ctx.fillStyle = "#FFFBEB";
+      ctx.fillRect(0, 0, W, floorY);
+      ctx.fillStyle = "#78350F";
+      ctx.fillRect(0, floorY, W, H - floorY);
+
+      const stripes = 8;
+      const sw = W / stripes;
+      for (let i = 0; i < stripes; i++) {
+        VB.celBox(ctx, i * sw, 265, sw + 4, 74 * S, [0, 0, 22, 22], i % 2 === 0 ? "#EF4444" : "#FFFFFF", 5, 0.15);
+      }
+
+      const counterY = floorY - 56 * S;
+      VB.celBox(ctx, W * 0.06, counterY - 125 * S, W * 0.42, 130 * S, 18, "rgba(186, 230, 253, 0.55)", 6, 0.15);
+      [-100, -32, 36, 104].forEach((ox) => {
+        ctx.beginPath();
+        ctx.arc(W * 0.27 + ox * S, counterY - 40 * S, 22 * S, 0, Math.PI * 2);
+        ctx.fillStyle = "#F59E0B";
+        ctx.fill();
+        ctx.lineWidth = 4.5;
+        ctx.strokeStyle = OUTLINE;
+        ctx.stroke();
+      });
+
+      // Esteira desenhada ANTES dos personagens (no nível dos pés!) para nunca cortar o tronco
+      VB.drawConveyorBelt(ctx, W * 0.46, floorY - 16 * S, W * 0.48, 56 * S, t, 155);
+
+      if (!Array.isArray(cena.personagens) || cena.personagens.length === 0) {
+        VB.drawPadeiro(ctx, { x: W * 0.24, y: floorY - 165 * S, scale: 1.14 * S, expr: "happy", nametag: "Seu_Zé", t, progress });
+        VB.renderSceneActors(
+          ctx,
+          W,
+          H,
+          [{ tipo: "menino", fromX: 0.86, toX: 0.62, fromY: (floorY - 165 * S) / H, toY: (floorY - 165 * S) / H, path: "run", scale: 1.16, item_in_hand: "pix_phone", expr: "star_eyes" }],
+          t,
+          sceneDur,
+          progress,
+          S
+        );
+      } else {
+        VB.renderSceneActors(ctx, W, H, cena.personagens, t, sceneDur, progress, S);
+      }
+    } else if (envName === "rua_cidade") {
+      // Rua brasileira animada com prédios em parallax, semáforo e asfalto de blocos
+      const roadY = H * 0.69;
+      const sky = ctx.createLinearGradient(0, 0, 0, roadY);
+      sky.addColorStop(0, "#0284C7");
+      sky.addColorStop(1, "#7DD3FC");
+      ctx.fillRect(0, 0, W, roadY);
+
+      VB.drawParallaxClouds(ctx, W, t, 315, 0.9 * S);
+
+      // Prédios ao fundo com leve deslocamento parallax
+      const pShift = (t * 24) % 240;
+      const bColors = ["#F97316", "#8B5CF6", "#FACC15", "#EC4899", "#22C55E", "#38BDF8"];
+      for (let i = -1; i < 6; i++) {
+        const bx = i * 240 - pShift;
+        const bh = (250 + ((i + 10) % 3) * 85) * S;
+        VB.celBox(ctx, bx, roadY - bh, 222, bh, 14, bColors[(i + 10) % bColors.length], 6, 0.22);
+      }
+
+      drawStuddedStreet(ctx, W, H, roadY);
+
+      // Semáforo interativo piscando
+      const semX = W * 0.84;
+      VB.celBox(ctx, semX - 8, roadY - 290 * S, 16, 290 * S, 6, "#334155", 5, 0);
+      VB.celBox(ctx, semX - 32, roadY - 350 * S, 64, 136 * S, 16, "#0F172A", 5.5, 0);
+      const activeLight = Math.floor(t * 1.5) % 3;
+      ["#EF4444", "#FACC15", "#22C55E"].forEach((lc, li) => {
+        ctx.beginPath();
+        ctx.arc(semX, roadY - (322 - li * 40) * S, 14 * S, 0, Math.PI * 2);
+        ctx.fillStyle = activeLight === li ? lc : "rgba(255,255,255,0.18)";
+        ctx.fill();
+      });
+
+      if (!Array.isArray(cena.personagens) || cena.personagens.length === 0) {
+        VB.renderSceneActors(
+          ctx,
+          W,
+          H,
+          [
+            { tipo: "menino", fromX: 0.15, toX: 0.68, fromY: (roadY - 95 * S) / H, toY: (roadY - 95 * S) / H, path: "run", goldenShoes: true, scale: 1.22 },
+            { tipo: "caramelo", fromX: 0.02, toX: 0.44, fromY: (roadY - 25 * S) / H, toY: (roadY - 25 * S) / H, path: "run", crown: true, scale: 1.08 },
+          ],
+          t,
+          sceneDur,
+          progress,
+          S
+        );
+      } else {
+        VB.renderSceneActors(ctx, W, H, cena.personagens, t, sceneDur, progress, S);
+      }
+      if (cena.pix_valor !== undefined) {
+        VB.drawPixCounter(ctx, W * 0.48, 215, t, progress, Number(cena.pix_valor), 0.9 * S);
+      }
+    } else if (envName === "servidor_admin") {
+      // Sala futurista do Servidor Admin com colunas neon, porta de cofre abrindo e cubos flutuantes
+      const floorY = H * 0.72;
+      ctx.fillStyle = "#090D1F";
+      ctx.fillRect(0, 0, W, H);
+
+      // Linhas de código/energia descendo ao fundo
+      ctx.save();
+      ctx.fillStyle = "rgba(34, 211, 238, 0.22)";
+      for (let col = 0; col < 12; col++) {
+        const cx = col * (W / 11);
+        const cy = ((t * (140 + col * 18) + col * 190) % floorY);
+        ctx.fillRect(cx, cy - 90, 8, 90);
+      }
+      ctx.restore();
+
+      // Piso gradeado neon
+      ctx.fillStyle = "#111827";
+      ctx.fillRect(0, floorY, W, H - floorY);
+      ctx.strokeStyle = "#22D3EE";
+      ctx.lineWidth = 3;
+      for (let gx = 0; gx <= W; gx += 90) {
+        ctx.beginPath();
+        ctx.moveTo(W * 0.5 + (gx - W * 0.5) * 0.45, floorY);
+        ctx.lineTo(gx, H);
+        ctx.stroke();
+      }
+      ctx.beginPath();
+      ctx.moveTo(0, floorY);
+      ctx.lineTo(W, floorY);
+      ctx.lineWidth = 6;
+      ctx.stroke();
+
+      VB.drawAnimatedDoor(ctx, W * 0.5 - 120 * S, 365, 240 * S, 305 * S, progress, cena.porta_label || "PAINEL ADMIN");
+      VB.isoCube(ctx, W * 0.16, 440 + Math.sin(t * 4) * 18, 84 * S, "#FDE047", "#EAB308", "#CA8A04", 5.5);
+      VB.isoCube(ctx, W * 0.82, 460 + Math.cos(t * 4) * 18, 84 * S, "#4ADE80", "#22C55E", "#15803D", 5.5);
+
+      if (!Array.isArray(cena.personagens) || cena.personagens.length === 0) {
+        VB.drawBoy(ctx, {
+          x: W * 0.5,
+          y: floorY - 150 * S,
+          scale: 1.26 * S,
+          state: "celebrate",
+          expr: "star_eyes",
+          crown: true,
+          goldenShoes: true,
+          nametag: "Admin_999",
+          t,
+          progress,
+        });
+      } else {
+        VB.renderSceneActors(ctx, W, H, cena.personagens, t, sceneDur, progress, S);
+      }
+    } else if (envName === "quarto_gamer") {
+      // Quarto Gamer RGB com fita LED animada, setup duplo de monitores e janela noturna
+      const floorY = H * 0.72;
+      ctx.fillStyle = "#1E1B4B";
+      ctx.fillRect(0, 0, W, floorY);
+      ctx.fillStyle = "#312E81";
+      ctx.fillRect(0, floorY, W, H - floorY);
+      ctx.beginPath();
+      ctx.moveTo(0, floorY);
+      ctx.lineTo(W, floorY);
+      ctx.lineWidth = 7;
+      ctx.strokeStyle = OUTLINE;
+      ctx.stroke();
+
+      // Fita LED RGB ciclando cores na parede
+      const hueColor = ["#22D3EE", "#EC4899", "#A855F7", "#5CE65C"][Math.floor(t * 3) % 4];
+      ctx.fillStyle = hueColor;
+      ctx.fillRect(0, 308, W, 12);
+
+      // Mesa gamer + 2 monitores brilhantes
+      const deskY = floorY - 115 * S;
+      VB.celBox(ctx, W * 0.14, deskY, 440 * S, 28 * S, 10, "#0F172A", 6, 0.2);
+      VB.celBox(ctx, W * 0.17, deskY - 135 * S, 185 * S, 118 * S, 14, "#111827", 6, 0);
+      VB.celBox(ctx, W * 0.185, deskY - 122 * S, 155 * S, 92 * S, 8, "#06B6D4", 4, 0);
+      VB.celBox(ctx, W * 0.37, deskY - 135 * S, 185 * S, 118 * S, 14, "#111827", 6, 0);
+      VB.celBox(ctx, W * 0.385, deskY - 122 * S, 155 * S, 92 * S, 8, "#8B5CF6", 4, 0);
+
+      if (!Array.isArray(cena.personagens) || cena.personagens.length === 0) {
+        VB.drawBoy(ctx, { x: W * 0.68, y: floorY - 125 * S, scale: 1.28 * S, state: "talk", expr: "happy", t, progress });
+      } else {
+        VB.renderSceneActors(ctx, W, H, cena.personagens, t, sceneDur, progress, S);
+      }
+      if (cena.pix_valor !== undefined) {
+        VB.drawPixCounter(ctx, W * 0.48, 215, t, progress, Number(cena.pix_valor), 0.92 * S);
+      }
+    } else if (Array.isArray(cena.personagens) && cena.personagens.length > 0) {
+      // Fallback universal customizado
+      drawSunburst(ctx, W, H, t, "#4F46E5", "#312E81");
+      VB.renderSceneActors(ctx, W, H, cena.personagens, t, sceneDur, progress, S);
     }
 
-    if (isL && cena.hud_dias) {
-      VB.drawHudBadge(ctx, W, cena.hud_dias);
+    // Em presets antigos, também permite sobrepor/adicionar personagens móveis extras via JSON!
+    const isNewPreset = ["casa_vo", "escola_parkour", "padaria", "rua_cidade", "servidor_admin", "quarto_gamer"].includes(envName);
+    if (!isNewPreset && Array.isArray(cena.personagens_extras) && cena.personagens_extras.length > 0) {
+      VB.renderSceneActors(ctx, W, H, cena.personagens_extras, t, sceneDur, progress, S);
+    }
+  };
+
+  // Overlay fixo de tela para HUD e Contador Pix (imune ao zoom/pan da câmera virtual!)
+  VB.renderScreenOverlays = function (ctx, W, H, cena = {}, t = 0, progress = 0) {
+    const isL = W > H;
+    const S = isL ? 0.68 : 0.92;
+    const badgeLabel = cena.hud_badge || cena.hud_dias;
+    if (badgeLabel) {
+      VB.drawHudBadge(ctx, W, badgeLabel, isL);
+    }
+    if (cena.pix_valor !== undefined) {
+      VB.drawPixCounter(ctx, W * 0.5, isL ? 86 : 155, t, progress, Number(cena.pix_valor), S);
     }
   };
 
@@ -1822,14 +2472,16 @@ window.VB = window.VB || {};
     const popScale = chunkAgeSec < 0.12 ? 0.86 + (chunkAgeSec / 0.12) * 0.18 : 1.0;
 
     ctx.save();
-    const subY = H * (isL ? 0.84 : 0.855);
-    ctx.translate(W / 2, subY);
+    // Zona segura do YouTube Shorts: acima do rodapé do canal (0.815) e livre dos botões da direita (W * 0.465)
+    const subY = H * (isL ? 0.84 : 0.815);
+    const subCenterX = isL ? W / 2 : W * 0.465;
+    ctx.translate(subCenterX, subY);
     ctx.scale(popScale, popScale);
 
     const upperWords = activeChunkWords.map((w) => w.toUpperCase());
-    let fontSize = isL ? 64 : 72;
-    const spaceW = 22;
-    const maxAllowedW = W - 150;
+    let fontSize = isL ? 64 : 68;
+    const spaceW = 20;
+    const maxAllowedW = isL ? W - 160 : W - 215;
 
     ctx.font = `900 ${fontSize}px 'Fredoka', 'Arial Black', sans-serif`;
     let widths = upperWords.map((w) => ctx.measureText(w).width);
